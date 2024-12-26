@@ -3,7 +3,15 @@ const { SlashCommandBuilder } = require('discord.js');
 module.exports = {
     data : new SlashCommandBuilder()
         .setName('레코드확인')
-        .setDescription('Check the status of the recording'),
+        .setNameLocalizations({
+            ko: '레코드확인',
+            en: 'recordStatus'
+        })
+        .setDescription('Check the status of the recording')
+        .setDescriptionLocalizations({
+            ko: '레코드 상태를 확인합니다',
+            en: 'Check the status of the recording'
+        }),
     async execute(interaction) {
         await fetch("https://overjjang.xyz/api/getWorkStatus")
             .then(res => res.json())

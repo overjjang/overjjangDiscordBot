@@ -2,16 +2,40 @@ const { SlashCommandBuilder, EmbedBuilder, Embed} = require('discord.js');
 const urlBase = "https://gubsicapi.overjjang.xyz/api";
 
 const data = new SlashCommandBuilder()
-        .setName('오늘점심')
-        .setDescription('오늘의 점심 메뉴를 확인합니다')
+        .setName('오늘급식')
+        .setNameLocalizations({
+            ko: '오늘급식',
+            en: 'todayLunch'
+        })
+        .setDescription('오늘의 급식 메뉴를 확인합니다')
+        .setDescriptionLocalizations({
+            ko: '오늘의 급식 메뉴를 확인합니다',
+            en: 'Check today\'s lunch menu'
+        })
         .addStringOption(option =>
             option.setName('학교이름')
+                .setNameLocalizations({
+                    ko: '학교이름',
+                    en: 'schoolName'
+                })
                 .setDescription('학교 이름을 입력해주세요')
+                .setDescriptionLocalizations({
+                    ko: '학교 이름을 입력해주세요',
+                    en: 'Enter the name of the school'
+                })
                 .setRequired(true))
         // 날자 옵션
         .addStringOption(option =>
             option.setName('날짜')
+                .setNameLocalizations({
+                    ko: '날짜',
+                    en: 'date'
+                })
                 .setDescription('날짜를 입력해주세요(YYYY-MM-DD)')
+                .setDescriptionLocalizations({
+                    ko: '날짜를 입력해주세요(YYYY-MM-DD)',
+                    en: 'Enter the date(YYYY-MM-DD)'
+                })
                 .setRequired(false));
 
 module.exports = {
