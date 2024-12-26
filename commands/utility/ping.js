@@ -5,12 +5,12 @@ module.exports = {
         .setName('핑')
         .setNameLocalizations({
                 ko: '핑',
-                en: 'ping'
+                'en-US': 'ping'
             })
         .setDescription('핑 날려서 퐁 받기')
         .setDescriptionLocalizations({
                 ko: '핑 날려서 퐁 받기',
-                en: 'Send a ping and receive a pong'
+                'en-US': 'Send a ping and receive a pong'
             }),
     async execute(interaction) {
         await interaction.reply('퐁!');

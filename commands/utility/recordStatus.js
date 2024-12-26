@@ -5,12 +5,12 @@ module.exports = {
         .setName('레코드확인')
         .setNameLocalizations({
             ko: '레코드확인',
-            en: 'recordStatus'
+            'en-US' : 'record_status'
         })
         .setDescription('Check the status of the recording')
         .setDescriptionLocalizations({
             ko: '레코드 상태를 확인합니다',
-            en: 'Check the status of the recording'
+            'en-US': 'Check the status of the recording'
         }),
     async execute(interaction) {
         await fetch("https://overjjang.xyz/api/getWorkStatus")
