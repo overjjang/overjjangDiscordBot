@@ -47,9 +47,9 @@ module.exports = {
             .then(res => res.json())
             .then(async json => {
                 const date = interaction.options.getString('날짜') ? new Date(interaction.options.getString('날짜')).toISOString().slice(0, 10) : new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
-                const atptCode = json.schoolInfo[1].row[0].ATPT_OFCDC_SC_CODE;
-                const schoolCode = json.schoolInfo[1].row[0].SD_SCHUL_CODE;
                 if (json.schoolInfo[0].head[0].list_total_count === 1) {
+                    const atptCode = json.schoolInfo[1].row[0].ATPT_OFCDC_SC_CODE;
+                    const schoolCode = json.schoolInfo[1].row[0].SD_SCHUL_CODE;
                     await fetch(urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date.replace(/-/g, '')}`)
                         .then(res => res.json())
                         .then(json => {
@@ -140,7 +140,7 @@ module.exports = {
             })
             .catch(err => {
                 console.error(err);
-                interaction.editReply("서버와의 통신 중 오류 발생");
+                interaction.reply("서버와의 통신 중 오류 발생");
             });
     }
 }
