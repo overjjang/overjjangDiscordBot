@@ -13,6 +13,6 @@ module.exports = {
                 'en-US': 'Send a ping and receive a pong'
             }),
     async execute(interaction) {
-        await interaction.reply('퐁!');
+        await interaction.reply(`퐁! (${interaction.client.ws.ping}ms)`);
     },
 };
