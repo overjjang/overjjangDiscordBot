@@ -47,13 +47,14 @@ module.exports = {
             .then(res => res.json())
             .then(async json => {
                 const date = interaction.options.getString('날짜') ? new Date(interaction.options.getString('날짜')).toISOString().slice(0, 10) : new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
-                if (json.schoolInfo[0].head[0].list_total_count === 1) {
+                if (json.schoolInfo[0].head[0].list_total_count) {
                     const atptCode = json.schoolInfo[1].row[0].ATPT_OFCDC_SC_CODE;
                     const schoolCode = json.schoolInfo[1].row[0].SD_SCHUL_CODE;
+                    console.log(urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date.replace(/-/g, '')}`);
                     await fetch(urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date.replace(/-/g, '')}`)
                         .then(res => res.json())
-                        .then(json => {
-                            if (json.mealServiceDietInfo[0].head[0].list_total_count > 0) {
+                        .then(async json=> {
+                            if (!json.RESULT) {
                                 const menuEmbed = new EmbedBuilder()
                                     .setColor('#0099ff')
                                     .setTitle(`${json.mealServiceDietInfo[1].row[0].SCHUL_NM}의 급식 정보`)
@@ -66,16 +67,16 @@ module.exports = {
                                         }))
                                     )
                                     .setFooter({text: '급식 정보 제공: 교육청 NEIS API'});
-                                interaction.reply({embeds: [menuEmbed]});
+                                await interaction.reply({embeds: [menuEmbed]});
                             } else {
-                                interaction.reply("급식 정보가 없습니다");
+                                await interaction.reply("급식 정보가 없습니다");
                             }
                         })
-                        .catch(err => {
+                        .catch(async err=> {
                             console.error(err);
-                            interaction.reply("서버와의 통신 중 오류 발생");
+                            await interaction.reply("서버와의 통신 중 오류 발생");
                         })
-                } else if (json.schoolInfo[0].head[0].list_total_count === 0) {
+                } else if (!json.schoolInfo[0].head[0].list_total_count) {
                     interaction.reply("검색된 학교가 없습니다. 학교 이름을 다시 확인해주세요");
                 } else {
                     const schoolEmbed = new EmbedBuilder()
@@ -112,7 +113,7 @@ module.exports = {
                         const schoolCode = selectedSchool.SD_SCHUL_CODE;
                         await fetch(urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date.replace(/-/g, '')}`)
                             .then(res => res.json())
-                            .then(json => {
+                            .then(async json => {
                                 if (json.mealServiceDietInfo[0].head[0].list_total_count > 0) {
                                     const menuEmbed = new EmbedBuilder()
                                         .setColor('#0099ff')
@@ -126,14 +127,14 @@ module.exports = {
                                             }))
                                         )
                                         .setFooter({text: '급식 정보 제공: 교육청 NEIS API'});
-                                    interaction.editReply({embeds: [menuEmbed], components: []});
+                                    await interaction.editReply({embeds: [menuEmbed], components: []});
                                 } else {
-                                    i.reply("급식 정보가 없습니다");
+                                    await i.reply("급식 정보가 없습니다");
                                 }
                             })
-                            .catch(err => {
+                            .catch(async err => {
                                 console.error(err);
-                                i.reply("서버와의 통신 중 오류 발생");
+                                await i.reply("서버와의 통신 중 오류 발생");
                             })
                     })
                 }

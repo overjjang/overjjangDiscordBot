@@ -2,11 +2,14 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, Events, GatewayIntentBits, ActivityType,PresenceUpdateStatus } = require('discord.js');
 const dotenv = require('dotenv');
-const deployCommands = require('./commadDeploy');
-
 dotenv.config();
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildVoiceStates, // 음성 상태 업데이트를 위해 추가
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+    ] });
 
 client.commands = new Collection();
 const foldersPath = path.join(__dirname, 'commands');
