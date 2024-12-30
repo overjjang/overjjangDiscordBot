@@ -1,6 +1,6 @@
 const {VoiceChannel, SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType } = require('discord.js');
 const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
-const { activeVoiceChannels } = require('../../events/voiceChange'); // voiceChange.js에서 가져오기
+const { activeVoiceChannels } = require('../events/voiceChange'); // voiceChange.js에서 가져오기
 
 
 const data = new SlashCommandBuilder()
@@ -34,8 +34,8 @@ const data = new SlashCommandBuilder()
             })
             .setDescription('한 팀당 팀원의 수를 입력해주세요')
             .setDescriptionLocalizations({
-                ko: '한 팀당 팀원의 수를 (N-N-N) 형식으로 입력해주세요',
-                'en-US': 'Enter the number of team members per team in the format (N-N-N)'
+                ko: '한 팀당 팀원의 수를 (N:N:N) 형식으로 입력해주세요',
+                'en-US': 'Enter the number of team members per team in the format (N:N:N)'
             })
             .setRequired(false));
 
@@ -57,21 +57,21 @@ module.exports = {
         try {
             const channel = await interaction.guild.channels.fetch(voiceChId, {force: true});
             console.log(`사용자가 있는 음성 채널: ${channel.name}`);
-            // 음성 채널의 멤버들을 배열로 가져오기
-            const members = Array.from(channel.members.values());
-            if (members.length <= teamCount) {
-                return interaction.editReply("팀 수가 인원 수보다 많거나 같습니다. 인원 수보다 적은 팀 수를 입력해주세요!");
+            // 음성 채널의 멤버들을 배열로 가져오기, 봇 제외
+            const members = Array.from(channel.members.values()).filter(member => !member.user.bot);
+            if (members.length < teamCount) {
+                return interaction.editReply("팀 수가 인원 수보다 많습니다. 다시 입력해주세요!");
             }
 
             if (teamCount < 2) {
-                return interaction.editReply("팀 수는 2개 이상이어야 합니다!");
+                return interaction.editReply("팀 수는 2개 이상이어야 합니다.");
             }
 
             const tramFormat = interaction.options.getString('팀원수');
             const teams = Array.from({ length: teamCount }, () => []);
             
             if (tramFormat) {
-                const teamSizes = tramFormat.split('-').map(Number);
+                const teamSizes = tramFormat.split(':').map(Number);
                 if (teamSizes.length !== teamCount) {
                     return interaction.editReply("형식과 팀 수가 일치하지 않습니다. 다시 입력해주세요!");
                 }

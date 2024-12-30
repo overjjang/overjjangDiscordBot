@@ -6,7 +6,7 @@ module.exports = {
     name: Events.VoiceStateUpdate,
     async execute(oldState, newState) {
         const userId = newState.member.user.id;
-
+        if (newState.member.user.bot) return; // 봇은 무시
         if (oldState.channelId === null && newState.channelId !== null) {
             // 사용자가 음성 채널에 입장
             activeVoiceChannels.set(userId, newState.channelId);
