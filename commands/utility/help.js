@@ -13,6 +13,7 @@ const data = new SlashCommandBuilder()
     });
 
 module.exports = {
+    category: 'utility',
     data : data,
     async execute(interaction) {
         const helpEmbed = new EmbedBuilder()

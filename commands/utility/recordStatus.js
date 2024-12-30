@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
+    category: 'utility',
     data : new SlashCommandBuilder()
         .setName('레코드확인')
         .setNameLocalizations({
