@@ -18,32 +18,43 @@ const data = new SlashCommandBuilder()
                         {name : '파라모', value: 'paramo'}
                     ]))
     )
+    .addSubcommand(subcommand =>
+    subcommand
+        .setName('전적')
+        .setDescription('전적 정보를 제공합니다')
+        .addStringOption(option => option.setName('닉네임').setRequired(true))
+    );
 
 module.exports = {
     data: data,
     async execute(interaction) {
-        const map = interaction.options.getString('맵');
-        let mapName;
-        let mapImage;
-        if (map === 'erangel') {
-            mapName = '에란겔';
-            mapImage = 'erangel';
-        } else if(map === 'taego') {
-            mapName = '태이고';
-            mapImage = 'taego';
-        } else if (map === 'vikendi') {
-            mapName = '비켄디';
-            mapImage = 'vikendi';
-        } else if (map === 'paramo') {
-            mapName = '파라모';
-            mapImage = 'paramo';
-        }
-        const mapEmbed = new EmbedBuilder()
-            .setColor('#0099ff')
-            .setTitle('비밀의방 정보')
-            .setDescription(`${mapName}의 비밀의방 정보를 제공합니다`)
-            .setImage(`https://overjjang.xyz/api/asset/PUBG/${mapImage}`);
+        if (interaction.options.getSubcommand() === '비밀의방') {
+            const map = interaction.options.getString('맵');
+            let mapName;
+            let mapImage;
+            if (map === 'erangel') {
+                mapName = '에란겔';
+                mapImage = 'erangel';
+            } else if (map === 'taego') {
+                mapName = '태이고';
+                mapImage = 'taego';
+            } else if (map === 'vikendi') {
+                mapName = '비켄디';
+                mapImage = 'vikendi';
+            } else if (map === 'paramo') {
+                mapName = '파라모';
+                mapImage = 'paramo';
+            } else {
+                interaction.reply('뭐하세요');
+                return;
+            }
+            const mapEmbed = new EmbedBuilder()
+                .setColor('#0099ff')
+                .setTitle('비밀의방 정보')
+                .setDescription(`${mapName}의 비밀의방 정보를 제공합니다`)
+                .setImage(`https://overjjang.xyz/api/asset/PUBG/${mapImage}`);
 
-        interaction.reply({ embeds: [mapEmbed] });
+            interaction.reply({embeds: [mapEmbed]});
+        }
     }
 }

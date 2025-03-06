@@ -46,7 +46,7 @@ module.exports = {
                         .setFields(
                             json.hosts.map((item, index) => ({
                                 name: item.name,
-                                value: `상태: ${json.hosts[index].up ? "On 🟩" : "Off 🟥"} | ${json.hosts[index].description} | ${json.hosts[index].state? `${json.hosts[index].state}` : ""}`
+                                value: `상태: ${json.hosts[index].up ? "On 🟩" : "Off 🟥"}\n| ${json.hosts[index].description} |${json.hosts[index].state? `\n| ${json.hosts[index].state} |` : ""}`
                             }))
                         )
                     await interaction.reply({embeds:[stateEmbed]});
