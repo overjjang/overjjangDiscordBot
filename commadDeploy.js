@@ -4,6 +4,7 @@ const path = require('path');
 const dotenv = require('dotenv');
 dotenv.config();
 
+
 const deployCommands = () => {
     const token = process.env.TOKEN;
     const clientId = process.env.CLIENT_ID;
@@ -32,6 +33,12 @@ const deployCommands = () => {
 
 // Construct and prepare an instance of the REST module
     const rest = new REST().setToken(token);
+
+
+    // reset commands
+    rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: [] })
+        .then(() => console.log('Successfully deleted all guild commands.'))
+        .catch(console.error);
 
 // and deploy your commands!
     (async () => {
