@@ -39,7 +39,6 @@ module.exports = {
             await fetch("https://overjjang.xyz/api/getHostStatus")
                 .then(response => response.json())
                 .then(async json => {
-                    console.log(json);
                     const stateEmbed = new EmbedBuilder()
                         .setColor("#0099ff")
                         .setTitle("호스팅 상태")
@@ -50,7 +49,6 @@ module.exports = {
                                 value: `상태: ${json.hosts[index].up ? "On 🟩" : "Off 🟥"} | ${json.hosts[index].description} | ${json.hosts[index].state? `${json.hosts[index].state}` : ""}`
                             }))
                         )
-                    console.log(stateEmbed);
                     await interaction.reply({embeds:[stateEmbed]});
                 })
         }
