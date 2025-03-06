@@ -1,4 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 module.exports = {
     category: 'utility',
@@ -14,7 +17,7 @@ module.exports = {
             'en-US': 'Check the status of the recording'
         }),
     async execute(interaction) {
-        await fetch("https://overjjang.xyz/api/getWorkStatus")
+        await fetch(process.env.RECORD_STATUS)
             .then(res => res.json())
             .then(json => {
                     const stateEmbed= new EmbedBuilder()
