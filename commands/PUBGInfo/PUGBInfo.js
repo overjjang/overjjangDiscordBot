@@ -26,6 +26,15 @@ const data = new SlashCommandBuilder()
         .setName('전적')
         .setDescription('전적 정보를 제공합니다')
         .addStringOption(option =>
+        option
+            .setName('플렛폼')
+            .setDescription('전적을 찾으려는 플랫폼을 입력해주세요')
+            .setRequired(true)
+            .addChoices(
+                {name: 'Steam', value: 'steam'},
+                {name: 'Kakao', value: 'kakao'}
+        ))
+        .addStringOption(option =>
             option
                 .setName('닉네임')
                 .setRequired(true)
@@ -63,20 +72,38 @@ module.exports = {
 
             interaction.reply({embeds: [mapEmbed]});
         }
-        //api키 찾아
         if(interaction.options.getSubcommand() === '전적') {
             const nickname = interaction.options.getString('닉네임');
-            const embed = new EmbedBuilder()
-                .setColor('#0099ff')
-                .setTitle('전적 정보')
-                .setDescription(`${nickname}의 전적 정보를 제공합니다(미구현)`)
-                .setFields(
-                    {name: '닉네임', value: nickname},
-                    {name: '플랫폼', value: 'Steam'},
-                    {name: '티어', value: 'Unranked'},
-                )
-                .setTimestamp()
-            interaction.reply({embeds: [embed]});
+            const platform = interaction.options.getString('플렛폼');
+            await fetch(`https://api.pubg.com/shards/${platform}/players?filter[playerNames]=${nickname}`, {
+                method: 'GET',
+                headers: {
+                    "Authorization": "Bearer "+process.env.PUBG_KEY,
+                    "Accept": "application/vnd.api+json"
+                }
+            })
+                .then(json => json.json())
+                .then(async json => {
+                    console.log(json);
+                    // if (json.data.length === 0) {
+                    //     const embed = new EmbedBuilder()
+                    //         .setColor('#0099ff')
+                    //         .setTitle('전적 정보')
+                    //         .setDescription(`${nickname}인 유저를 찾을 수 없습니다`)
+                    // } else if (json.data.length === 1) {
+                    //     await fetch(`https://api.pubg.com/shards/${platform}/players/${nickname}`, {
+                    //         method: 'GET',
+                    //         headers: {
+                    //             "Authorization": "Bearer " + process.env.PUBG_KEY,
+                    //             "Accept": "application/vnd.api+json"
+                    //         }
+                    //     })
+                    //         .then(json => json.json())
+                    //         .then(json => {
+                    //             console.log(json);
+                    //         })
+                    // }
+                })
         }
     }
-}
+    }
