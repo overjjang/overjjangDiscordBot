@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
     category: 'utility',
@@ -14,6 +14,12 @@ module.exports = {
                 'en-US': 'Send a ping and receive a pong'
             }),
     async execute(interaction) {
-        await interaction.reply(`퐁! (${interaction.client.ws.ping}ms)`);
+        await interaction.reply({embeds:[
+            new EmbedBuilder()
+                .setColor('#0099ff')
+                .setTitle('퐁')
+                .setDescription(`${interaction.client.ws.ping}ms`)
+            ]})
+        //await interaction.reply(`퐁! (${interaction.client.ws.ping}ms)`);
     },
 };

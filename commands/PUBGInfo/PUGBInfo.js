@@ -1,4 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType, AttachmentBuilder } = require('discord.js');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const data = new SlashCommandBuilder()
     .setName('배그')
@@ -22,7 +25,11 @@ const data = new SlashCommandBuilder()
     subcommand
         .setName('전적')
         .setDescription('전적 정보를 제공합니다')
-        .addStringOption(option => option.setName('닉네임').setRequired(true))
+        .addStringOption(option =>
+            option
+                .setName('닉네임')
+                .setRequired(true)
+                .setDescription('전적을 찾으려는 닉네임을 입력해주세요'))
     );
 
 module.exports = {
@@ -55,6 +62,21 @@ module.exports = {
                 .setImage(`https://overjjang.xyz/api/asset/PUBG/${mapImage}`);
 
             interaction.reply({embeds: [mapEmbed]});
+        }
+        //api키 찾아
+        if(interaction.options.getSubcommand() === '전적') {
+            const nickname = interaction.options.getString('닉네임');
+            const embed = new EmbedBuilder()
+                .setColor('#0099ff')
+                .setTitle('전적 정보')
+                .setDescription(`${nickname}의 전적 정보를 제공합니다(미구현)`)
+                .setFields(
+                    {name: '닉네임', value: nickname},
+                    {name: '플랫폼', value: 'Steam'},
+                    {name: '티어', value: 'Unranked'},
+                )
+                .setTimestamp()
+            interaction.reply({embeds: [embed]});
         }
     }
 }
