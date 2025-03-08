@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType, AttachmentBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType, AttachmentBuilder,ButtonBuilder,ButtonStyle } = require('discord.js');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -39,7 +39,6 @@ const data = new SlashCommandBuilder()
                 .setName('닉네임')
                 .setRequired(true)
                 .setDescription('전적을 찾으려는 닉네임을 입력해주세요')
-                .setAutocomplete(true)
         )
         .addStringOption(option =>
         option
@@ -85,7 +84,7 @@ const data = new SlashCommandBuilder()
 
 
 //배그 전적 정보 가져오기
-async function getPlayerData(nickName,playerID, mode, season) {
+async function getPlayerData(nickName,playerID, mode, season, platform, moreStats = false) {
     let embedData;
     await fetch(`https://api.pubg.com/shards/steam/players/${playerID}/seasons/lifetime?filter[gamepad]=false`, {
         method: 'GET',
@@ -95,105 +94,77 @@ async function getPlayerData(nickName,playerID, mode, season) {
         }
     })
         .then(json => json.json())
-        .then(async json=> {
-            let kills=0, deaths=0, assists=0, wins=0, top10s=0, roundsPlayed=0, headshotKills=0, damageDealt = 0, DBNOs = 0,teamKills = 0, timeSurvived = 0, roadKills = 0, longestKill = 0, vehicleDestroys = 0, revives = 0, boosts = 0, heals = 0, weaponsAcquired = 0
-            if(mode === null) {
-                for (const key in json.data.attributes.gameModeStats) {
-                    kills += json.data.attributes.gameModeStats[key].kills;
-                    deaths += json.data.attributes.gameModeStats[key].deaths;
-                    assists += json.data.attributes.gameModeStats[key].assists;
-                    wins += json.data.attributes.gameModeStats[key].wins;
-                    top10s += json.data.attributes.gameModeStats[key].top10s;
-                    roundsPlayed += json.data.attributes.gameModeStats[key].roundsPlayed;
-                    headshotKills += json.data.attributes.gameModeStats[key].headshotKills;
-                    damageDealt += json.data.attributes.gameModeStats[key].damageDealt;
-                    DBNOs += json.data.attributes.gameModeStats[key].dBNOs;
-                    teamKills += json.data.attributes.gameModeStats[key].teamKills;
-                    timeSurvived += json.data.attributes.gameModeStats[key].timeSurvived;
-                    roadKills += json.data.attributes.gameModeStats[key].roadKills;
-                    boosts += json.data.attributes.gameModeStats[key].boosts;
-                    heals += json.data.attributes.gameModeStats[key].heals;
-                    weaponsAcquired += json.data.attributes.gameModeStats[key].weaponsAcquired;
-                    revives += json.data.attributes.gameModeStats[key].revives;
-                    vehicleDestroys += json.data.attributes.gameModeStats[key].vehicleDestroys;
+        .then(async json => {
+            const stats = json.data.attributes.gameModeStats;
+            const aggregateStats = (modes) => modes.reduce((acc, mode) => {
+                const modeStats = stats[mode];
+                for (const key in modeStats) {
+                    acc[key] = (acc[key] || 0) + modeStats[key];
                 }
-                embedData = {
-                    mode: "lifetime",
-                    kills: kills,
-                    deaths: deaths,
-                    assists: assists,
-                    wins: wins,
-                    top10s: top10s,
-                    roundsPlayed: roundsPlayed,
-                    headshotKills: headshotKills,
-                    damageDealt: damageDealt,
-                    DBNOs : DBNOs,
-                    teamKills : teamKills,
-                    timeSurvived : timeSurvived,
-                    roadKills : roadKills,
-                    boosts : boosts,
-                    heals : heals,
-                    weaponsAcquired : weaponsAcquired,
-                    revives : revives,
-                    vehicleDestroys : vehicleDestroys
-                }
-            } else {
-                embedData = {
-                    mode: mode,
-                    kills: json.data.attributes.gameModeStats[mode].kills,
-                    deaths: json.data.attributes.gameModeStats[mode].deaths,
-                    assists: json.data.attributes.gameModeStats[mode].assists,
-                    wins: json.data.attributes.gameModeStats[mode].wins,
-                    top10s: json.data.attributes.gameModeStats[mode].top10s,
-                    roundsPlayed: json.data.attributes.gameModeStats[mode].roundsPlayed,
-                    headshotKills: json.data.attributes.gameModeStats[mode].headshotKills,
-                    damageDealt: json.data.attributes.gameModeStats[mode].damageDealt,
-                    DBNOs : json.data.attributes.gameModeStats[mode].dBNOs,
-                    teamKills : json.data.attributes.gameModeStats[mode].teamKills,
-                    timeSurvived : json.data.attributes.gameModeStats[mode].timeSurvived,
-                    roadKills : json.data.attributes.gameModeStats[mode].roadKills,
-                    boosts : json.data.attributes.gameModeStats[mode].boosts,
-                    heals : json.data.attributes.gameModeStats[mode].heals,
-                    weaponsAcquired : json.data.attributes.gameModeStats[mode].weaponsAcquired,
-                    revives : json.data.attributes.gameModeStats[mode].revives,
-                    vehicleDestroys : json.data.attributes.gameModeStats[mode].vehicleDestroys
-                }
-            }
+                return acc;
+            }, {});
+
+            const modes = mode ? [mode] : Object.keys(stats);
+            const aggregated = aggregateStats(modes);
+
+            embedData = {
+                mode: mode || "lifetime",
+                kills: aggregated.kills,
+                deaths: aggregated.deaths,
+                assists: aggregated.assists,
+                wins: aggregated.wins,
+                top10s: aggregated.top10s,
+                roundsPlayed: aggregated.roundsPlayed,
+                headshotKills: aggregated.headshotKills,
+                damageDealt: aggregated.damageDealt,
+                DBNOs: aggregated.dBNOs,
+                teamKills: aggregated.teamKills,
+                timeSurvived: aggregated.timeSurvived,
+                roadKills: aggregated.roadKills,
+                boosts: aggregated.boosts,
+                heals: aggregated.heals,
+                weaponsAcquired: aggregated.weaponsAcquired,
+                revives: aggregated.revives,
+                vehicleDestroys: aggregated.vehicleDestroys
+            };
         })
-    return new EmbedBuilder()
+    const embed = new EmbedBuilder()
         .setColor('#0099ff')
-        .setTitle('전적 정보')
-        .setDescription(`${nickName}님의 ${mode === null ? "전체" : mode } 전적 정보입니다`)
+        .setTitle(`${nickName}님의 전적 정보`)
+        .setDescription(`플렛폼: ${platform}\n모드: ${embedData.mode === 'lifetime' ? '전체' : embedData.mode}`)
         .setFields(
-            {name: "킬", value: embedData.kills.toString(), inline: true},
-            {name: "다운", value: embedData.DBNOs.toString(), inline: true},
-            {name: "다운당 킬", value: (embedData.kills / embedData.DBNOs).toFixed(2).toString(), inline: true},
-            {name: "어시스트", value: embedData.assists.toString(), inline: true},
-            {name: "승리", value: embedData.wins.toString(), inline: true},
-            {name: "탑10", value: embedData.top10s.toString(), inline: true},
-            {name: "라운드 플레이", value: embedData.roundsPlayed.toString(), inline: true},
-            {name: "헤드샷 킬", value: embedData.headshotKills.toString(), inline: true},
-            {name: "헤드샷 비울", value: (embedData.headshotKills / embedData.kills).toFixed(2).toString(), inline: true},
-            {name: "데미지", value: embedData.damageDealt.toFixed(2).toString(), inline: true},
-            {name:"고라니", value: embedData.roadKills.toString(), inline: true},
-            {name: "팀킬", value: embedData.teamKills.toString(), inline: true},
-            {name: "생존 시간", value: (embedData.timeSurvived / 60).toFixed(2).toString(), inline: true},
-            {name: "평균 생존 시간", value: (embedData.timeSurvived / embedData.roundsPlayed / 60).toFixed(2).toString(), inline: true},
-            {name: "부스트 아이템 사용", value: embedData.boosts.toString(), inline: true},
-            {name: "힐 아이템 사용", value: embedData.heals.toString(), inline: true},
-            {name: "무기 획득", value: embedData.weaponsAcquired.toString(), inline: true},
-            {name: "팀원 소생", value: embedData.revives.toString(), inline: true},
-            {name: "차량 파괴", value: embedData.vehicleDestroys.toString(), inline: true},
-            {
-                name: "승률",
-                value: ((embedData.wins / embedData.roundsPlayed) * 100).toFixed(2).toString()+"%",
-                inline: true
-            },
-            {name: "라운드 평균 킬", value: (embedData.kills / embedData.roundsPlayed).toFixed(2).toString(), inline: true},
-            {name: "라운드 평균 데미지", value: (embedData.damageDealt / embedData.roundsPlayed).toFixed(2).toString(), inline: true},
-            {name: "라운드 평균 어시스트", value: (embedData.assists / embedData.roundsPlayed).toFixed(2).toString(), inline: true},
-            {name: "라운드 평균 헤드샷 킬", value: (embedData.headshotKills / embedData.roundsPlayed).toFixed(2).toString(), inline: true},
+            {name: "🔫 킬 / 다운 / 어시스트", value: `${embedData.kills}킬 / ${embedData.DBNOs}다운 / ${embedData.assists}어시`, inline: false},
         )
+        .addFields(
+            {name: "🍗 / top10 / 라운드", value: `${embedData.wins} / ${embedData.top10s} / ${embedData.roundsPlayed}`, inline: false},
+        )
+        .addFields(
+            {name: "❌ 헤드샷 킬 / 비율", value: `${embedData.headshotKills} / ${(embedData.headshotKills / embedData.kills).toFixed(2)}%`, inline: false},
+        ).addFields(
+            {name:"🚙 고라니", value: embedData.roadKills.toString(), inline: true},
+            {name: "😜 팀킬", value: embedData.teamKills.toString(), inline: true},
+            {name: "🏥 팀원 소생", value: embedData.revives.toString(), inline: true},
+        )
+    if (moreStats) {
+        embed//여기부터 상세 통계로 돌리기
+            .addFields(
+                {name: "⏱생존 시간 / 라운드 평균", value: `${(embedData.timeSurvived / 60).toFixed(2).toString()}분 / ${(embedData.timeSurvived / embedData.roundsPlayed / 60).toFixed(2)}분`}
+            ).addFields(
+            {name: "🚑 부스트 / 힐 아이템", value: `${embedData.boosts} / ${embedData.heals}`, inline: true},
+            {name: "🔫 무기 획득", value: embedData.weaponsAcquired.toString(), inline: true},
+            {name: "🚙 차량 파괴", value: embedData.vehicleDestroys.toString(), inline: true},
+        ).addFields(
+            {
+                name: "😎 승률",
+                value: ((embedData.wins / embedData.roundsPlayed) * 100).toFixed(2).toString()+"%",
+            },
+            {name: "평균 킬", value: (embedData.kills / embedData.roundsPlayed).toFixed(2).toString(), inline: true},
+            {name: "평균 데미지", value: (embedData.damageDealt / embedData.roundsPlayed).toFixed(2).toString(), inline: true},
+            {name: "평균 어시스트", value: (embedData.assists / embedData.roundsPlayed).toFixed(2).toString(), inline: true},
+        )
+    }
+    embed.setFooter({text:'데이터 제공: PUBG API'}).setTimestamp();
+    return embed;
 }
 
 
@@ -292,8 +263,25 @@ module.exports = {
                     }
                     else if (json.data.length === 1) {
                         const playerId = json.data[0].id;
-                        const embed = await getPlayerData(nickname,playerId, mode, 'lifetime')
-                        await interaction.reply({embeds: [embed]});
+                        const embed = await getPlayerData(nickname, playerId, mode, 'lifetime', platform);
+                        const moreStateButton = new ButtonBuilder()
+                            .setEmoji("📊")
+                            .setLabel("더보기")
+                            .setStyle(ButtonStyle.Secondary)
+                            .setCustomId("moreStats");
+
+                        const moreStateActionRow = new ActionRowBuilder()
+                            .addComponents(moreStateButton);
+                        const response = await interaction.reply({embeds: [embed], components: [moreStateActionRow], withResponse: true});
+
+                        const collector = response.createMessageComponentCollector({ componentType: ComponentType.Button, time: 3_600_000 });
+                        collector.on('collect', async i => {
+                            if(i.customId === 'moreStats') {
+
+                                const moreStatsEmbed = await getPlayerData(nickname,playerId, mode, 'lifetime', platform, true);
+                                await interaction.editReply({embeds: [moreStatsEmbed], components: []});
+                            }
+                        })
                     }
 
                 })
@@ -325,6 +313,8 @@ module.exports = {
                 else{
                     await interaction.reply({content: '메치ID 형식이 옳지 않습니다.', ephemeral: true});
                 }
+            } else if(nickname !== null) {
+                await fetch(``, {})
             }
         }
     }
