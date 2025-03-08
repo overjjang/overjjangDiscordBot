@@ -56,7 +56,7 @@ module.exports = {
                         await fetch(urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date.replace(/-/g, '')}`)
                             .then(res => res.json())
                             .then(async json => {
-                                if (!json.RESULT) {
+                                if (json.RESULT.CODE === 'INFO-000') {
                                     const menuEmbed = new EmbedBuilder()
                                         .setColor('#0099ff')
                                         .setTitle(`${json.mealServiceDietInfo[1].row[0].SCHUL_NM}의 급식 정보`)
