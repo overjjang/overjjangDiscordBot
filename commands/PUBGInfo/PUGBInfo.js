@@ -55,7 +55,32 @@ const data = new SlashCommandBuilder()
             )
             .setRequired(false)
         )
-        );
+    ).addSubcommand(subcommand =>
+            subcommand
+                .setName('메치')
+                .setDescription("메치 정보를 제공합니다")
+                .addStringOption(option =>
+                    option
+                        .setName('플렛폼')
+                        .setDescription("메치를 찾으려는 플랫폼을 입력해주세요")
+                        .setRequired(true)
+                        .addChoices(
+                            {name: 'Steam', value: 'steam'},
+                            {name: 'Kakao', value: 'kakao'}
+                        ))
+                .addStringOption(option =>
+                    option
+                        .setName('메치id')
+                        .setDescription("메치를 찾으려는 매치ID를 입력해주세요")
+                        .setRequired(false)
+                )
+                .addStringOption(option =>
+                    option
+                        .setName('닉네임')
+                        .setDescription("메치를 찾으려는 닉네임을 입력해주세요")
+                        .setRequired(false)
+                )
+    )
 
 
 
@@ -168,7 +193,7 @@ async function getPlayerData(nickName,playerID, mode, season) {
             {name: "라운드 평균 데미지", value: (embedData.damageDealt / embedData.roundsPlayed).toFixed(2).toString(), inline: true},
             {name: "라운드 평균 어시스트", value: (embedData.assists / embedData.roundsPlayed).toFixed(2).toString(), inline: true},
             {name: "라운드 평균 헤드샷 킬", value: (embedData.headshotKills / embedData.roundsPlayed).toFixed(2).toString(), inline: true},
-        );
+        )
 }
 
 
@@ -218,6 +243,7 @@ module.exports = {
             })
                 .then(json => json.json())
                 .then(async json => {
+                    console.log(json);
                     // if (json.data.length === 0) {
                     //     const embed = new EmbedBuilder()
                     //         .setColor('#0099ff')
@@ -271,6 +297,35 @@ module.exports = {
                     }
 
                 })
+        }
+
+        if (interaction.options.getSubcommand() === '메치'){
+            const platform = interaction.options.getString('플렛폼');
+            const matchID = interaction.options.getString('메치id');
+            const nickname = interaction.options.getString('닉네임');
+
+            if (interaction.options.getString('메치id') === null && interaction.options.getString('닉네임') === null) {
+                await interaction.reply({content: '메치ID 혹은 닉네임을 입력해주세요', ephemeral: true});
+            } else if(matchID !== null && nickname !== null) {
+                await interaction.reply({content: '닉네임과 메치ID는 오류 방지를 위해 동시에 입력할 수 없습니다. 추후 기능 수정 예정입니다.', ephemeral: true});
+            } else if(matchID !== null) {
+                if(matchID.length === 36 && /^[A-Za-z0-9-]+$/.test(matchID)){
+                    await fetch(`https://api.pubg.com/shards/${platform}/matches/${matchID}`, {
+                        method: 'GET',
+                        headers: {
+                            "Authorization": "Bearer " + process.env.PUBG_KEY,
+                            "Accept": "application/vnd.api+json"
+                        }
+                    })
+                        .then(json => json.json())
+                        .then(async json => {
+                            console.log(json);
+                        })
+                }
+                else{
+                    await interaction.reply({content: '메치ID 형식이 옳지 않습니다.', ephemeral: true});
+                }
+            }
         }
     }
 }
