@@ -1,0 +1,172 @@
+{
+  "commands": [
+    {
+      "name": "팀",
+      "description": "팀 관련 명령어",
+      "subcommands": [
+        {
+          "name": "나누기",
+          "description": "렌덤으로 팀을 나눕니다",
+          "options": [
+            {
+              "name": "팀수",
+              "description": "나눌 팀의 수를 입력해주세요"
+            },
+            {
+              "name": "팀원수",
+              "description": "한 팀당 팀원의 수를 (N:N:N) 형식으로 입력해주세요"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "도움말",
+      "description": "명령어 목록을 확인합니다",
+      "subcommands": []
+    },
+    {
+      "name": "오늘급식",
+      "description": "오늘의 급식 메뉴를 확인합니다",
+      "subcommands": [],
+      "options": [
+        {
+          "name": "학교이름",
+          "description": "학교 이름을 입력해주세요"
+        },
+        {
+          "name": "날짜",
+          "description": "날짜를 입력해주세요(YYYY-MM-DD)"
+        }
+      ]
+    },
+    {
+      "name": "운송장",
+      "description": "운송장을 조회합니다",
+      "subcommands": [
+        {
+          "name": "조회",
+          "description": "운송장을 조회합니다",
+          "options": [
+            {
+              "name": "운송회사",
+              "description": "운송회사를 선택해주세요"
+            },
+            {
+              "name": "운송장번호",
+              "description": "운송장 번호를 입력해주세요"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "핑",
+      "description": "핑 날려서 퐁 받기",
+      "subcommands": []
+    },
+    {
+      "name": "레코드확인",
+      "description": "레코드 상태를 확인합니다",
+      "subcommands": []
+    },
+    {
+      "name": "호스팅",
+      "description": "호스팅 정보를 제공합니다",
+      "subcommands": [
+        {
+          "name": "상태",
+          "description": "호스팅 상태를 확인합니다"
+        }
+      ]
+    },
+    {
+      "name": "배그",
+      "description": "배틀그라운드 정보를 제공합니다",
+      "subcommands": [
+        {
+          "name": "비밀의방",
+          "description": "비밀의방 정보를 제공합니다",
+          "options": [
+            {
+              "name": "맵",
+              "description": "비밀의을 찾으려는 맵을 입력해주세요"
+            }
+          ]
+        },
+        {
+          "name": "전적",
+          "description": "전적 정보를 제공합니다",
+          "options": [
+            {
+              "name": "플렛폼",
+              "description": "전적을 찾으려는 플랫폼을 입력해주세요"
+            },
+            {
+              "name": "닉네임",
+              "description": "전적을 찾으려는 닉네임을 입력해주세요"
+            },
+            {
+              "name": "모드",
+              "description": "전적을 찾으려는 모드를 입력해주세요"
+            }
+          ]
+        },
+        {
+          "name": "메치",
+          "description": "메치 정보를 제공합니다",
+          "options": [
+            {
+              "name": "플렛폼",
+              "description": "메치를 찾으려는 플랫폼을 입력해주세요"
+            },
+            {
+              "name": "메치id",
+              "description": "메치를 찾으려는 매치ID를 입력해주세요"
+            },
+            {
+              "name": "닉네임",
+              "description": "메치를 찾으려는 닉네임을 입력해주세요"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "admin",
+      "description": "관리자 명령어",
+      "subcommands": [
+        {
+          "name": "reload",
+          "description": "명령어를 리로드합니다",
+          "options": [
+            {
+              "name": "파일",
+              "description": "리로드할 파일을 입력해주세요"
+            }
+          ]
+        },
+        {
+          "name": "load",
+          "description": "명령어를 로드합니다",
+          "options": [
+            {
+              "name": "파일",
+              "description": "로드할 파일을 입력해주세요"
+            }
+          ]
+        },
+        {
+          "name": "unload",
+          "description": "명령어를 언로드합니다",
+          "options": [
+            {
+              "name": "파일",
+              "description": "언로드할 파일을 입력해주세요"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
