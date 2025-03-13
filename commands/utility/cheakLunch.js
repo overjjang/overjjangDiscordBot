@@ -49,6 +49,7 @@ module.exports = {
             .then(async json => {
                 const date = interaction.options.getString('날짜') ? new Date(interaction.options.getString('날짜')).toISOString().slice(0, 10) : new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
                 if (json.schoolInfo[0].head[0].list_total_count) {
+                    // 학교 정보가 1개인 경우
                     if (json.schoolInfo[0].head[0].list_total_count === 1) {
                         const atptCode = json.schoolInfo[1].row[0].ATPT_OFCDC_SC_CODE;
                         const schoolCode = json.schoolInfo[1].row[0].SD_SCHUL_CODE;
@@ -93,7 +94,7 @@ module.exports = {
                                 console.error(err);
                                 await interaction.reply("서버와의 통신 중 오류 발생");
                             })
-                    } else {
+                    } else { // 학교 정보가 여러개인 경우
                         const schoolEmbed = new EmbedBuilder()
                             .setColor('#0099ff')
                             .setTitle(`"${interaction.options.getString('학교이름')}"단어가 들어간 학교가 여러개입니다`)
@@ -153,7 +154,7 @@ module.exports = {
                                 })
                         })
                     }
-                } else if (!json.schoolInfo[0].head[0].list_total_count) {
+                } else if (!json.schoolInfo[0].head[0].list_total_count || json.RESULT.CODE === 'INFO-200') {
                     interaction.reply("검색된 학교가 없습니다. 학교 이름을 다시 확인해주세요");
                 } else {
                     interaction.reply("오류가 발생했습니다. 다시 시도해주세요");
