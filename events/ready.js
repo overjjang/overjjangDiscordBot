@@ -5,6 +5,6 @@ module.exports = {
     once: true,
     execute(client) {
         console.log(`Ready! Logged in as ${client.user.tag}`);
-        client.user.setPresence({ activities: [{ name: '조금만 더.' }], status: PresenceUpdateStatus.DoNotDisturb });
+        client.user.setPresence({ activities: [{ name: '/도움말 | 아직 개발' }], status: PresenceUpdateStatus.DoNotDisturb });
     },
 };
