@@ -113,18 +113,18 @@ module.exports = {
                             .addOptions(
                                 json.schoolInfo[1].row.map(item => new StringSelectMenuOptionBuilder()
                                     .setLabel(item.SCHUL_NM)
-                                    .setValue(item.SCHUL_NM)
+                                    .setValue(item.SD_SCHUL_CODE)
                                     .setDescription(item.ORG_RDNMA)
                                     .setEmoji('🏫'))
                             )
                         const row = new ActionRowBuilder()
-                            .addComponents(schoolSelect);
+                            .setComponents(schoolSelect);
                         const response = await interaction.reply({ embeds: [schoolEmbed] , components: [row] });
 
                         const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 3_600_000 });
 
                         collector.on('collect', async i => {
-                            const selectedSchool = json.schoolInfo[1].row.find(item => item.SCHUL_NM === i.values[0]);
+                            const selectedSchool = json.schoolInfo[1].row.find(item => item.SD_SCHUL_CODE === i.values[0]);
                             const atptCode = selectedSchool.ATPT_OFCDC_SC_CODE;
                             const schoolCode = selectedSchool.SD_SCHUL_CODE;
                             await fetch(urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date.replace(/-/g, '')}`)
@@ -133,7 +133,7 @@ module.exports = {
                                     if (json.mealServiceDietInfo[0].head[0].list_total_count > 0) {
                                         const menuEmbed = new EmbedBuilder()
                                             .setColor('#0099ff')
-                                            .setTitle(`${json.mealServiceDietInfo[1].row[0].SCHUL_NM}의 급식 정보`)
+                                            .setTitle(`${json.mealServiceDietInfo[1].row[0].SCHUL_NM}(${json.mealServiceDietInfo[1].row[0].ATPT_OFCDC_SC_NM})의 급식 정보`)
                                             .setDescription(`급식 정보는 ${date}일 기준입니다`)
                                             .setFields(
                                                 json.mealServiceDietInfo[1].row.map(item => ({
