@@ -1,6 +1,8 @@
 const {SlashCommandBuilder, EmbedBuilder,StringSelectMenuBuilder,StringSelectMenuOptionBuilder,ActionRowBuilder} = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+const ep = require('../../module/embedPrefix');
+const cm = require('../../module/color-model');
 
 // JSON 파일 경로 설정
 const jsonPath = path.join(__dirname, '../../companyList.json');
@@ -81,19 +83,19 @@ module.exports = {
                 await fetch(`https://gubsicapi.overjjang.xyz/api?mode=package&companyCode=${companyCode}&packageCode=${trackingNumber}`)
                     .then(res => res.json())
                     .then(async json => {
-                        const embed = new EmbedBuilder()
-                            .setColor('#0099ff')
-                            .setTitle(`상태:${json.lastDetail.kind} | 위치:${json.lastDetail.where} | 시간:${json.lastDetail.timeString}`)
-                            .setDescription(`상품명:${json.itemName} | 보내는 분:${json.senderName} | 받는 분:${json.receiverName}`)
-                            .setFields(
-                                json.trackingDetails.map((item, index) => ({
-                                    name : json.trackingDetails[index].kind,
-                                    value : `위치:${json.trackingDetails[index].where} | 시간:${json.trackingDetails[index].timeString}`
-                                }))
-                            )
-
-                        await interaction.reply({ embeds: [embed] });
+                        if (!json.code){
+                            const embed = ep.embedBase(`운송장 조회 결과`, "운송장 조회 결과", cm.success,
+                                    json.trackingDetails.map((item, index) => ({
+                                        name: json.trackingDetails[index].kind,
+                                        value: `위치:${json.trackingDetails[index].where} | 시간:${json.trackingDetails[index].timeString}`
+                                    }))
+                                )
+                            await interaction.reply({embeds: [embed]});
+                        } else{
+                            await interaction.reply({embeds:[ep.warningEmbed(json.code + " | " + json.msg)]});
+                        }
                     });
+
             } else if (filteredCompanies.length > 1) {
                 const select = new StringSelectMenuBuilder()
                     .setCustomId('company')
@@ -112,7 +114,7 @@ module.exports = {
 
                 await interaction.reply({ embeds: [embed], components: [row] });
             } else {
-                await interaction.reply({ content: '해당 이름의 택배사를 찾을 수 없습니다.', ephemeral: true });
+                await interaction.reply({embeds:[ep.warningEmbed("운송회사를 찾을 수 없습니다.")]});
             }
         }
     }

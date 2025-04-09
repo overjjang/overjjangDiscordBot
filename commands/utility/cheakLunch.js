@@ -58,36 +58,7 @@ module.exports = {
 
                         console.log("trying fetch to API: "+urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date.replace(/-/g, '')}`);
 
-                        await fetch(urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date.replace(/-/g, '')}`)
-                            .then(res => res.json())
-                            .then(async json => {
-                                if(!json.mealServiceDietInfo) {
-                                    await interaction.reply({embeds:[
-                                        ep.embedBase("급식 정보가 없습니다", "학교명과 일자를 확인해주세요", cm.warning).setFooter("급식 정보 제공: 교육청 NEIS API")
-                                        ]});
-                                }
-                                else if (json.mealServiceDietInfo[0].head[1].RESULT.CODE === 'INFO-000') {
-                                    const menuEmbed = ep.embedBase(`${json.mealServiceDietInfo[1].row[0].SCHUL_NM}의 급식 정보`, `급식 정보는 ${date}일 기준입니다`)
-                                        .setFields(
-                                            json.mealServiceDietInfo[1].row.map(item => ({
-                                                name: item.MMEAL_SC_NM,
-                                                value: item.DDISH_NM.replace(/<br\/>/g, '\n') + "\n",
-                                                inline: true
-                                            }))
-                                        )
-                                        .setFooter({text: '급식 정보 제공: 교육청 NEIS API'});
-                                    await interaction.reply({embeds: [menuEmbed]});
-                                } else{
-                                    await interaction.reply({embeds:[
-                                        ep.embedBase("급식 정보가 없습니다", "학교명과 일자를 확인해주세요", cm.warning)
-                                            .setFooter({text: '급식 정보 제공: 교육청 NEIS API'})
-                                        ]});
-                                }
-                            })
-                            .catch(async err => {
-                                console.error(err);
-                                await interaction.reply();
-                            })
+                        await interaction.reply({embeds:[await fetchMenu(atptCode, schoolCode, date)]});
                     } else { // 학교 정보가 여러개인 경우
                         const schoolEmbed = ep.embedBase(`"${interaction.options.getString('학교이름')}" 단어가 들어간 학교가 여러개입니다`, '다음 중 선택해주세요')
                             .setFields(
@@ -116,44 +87,7 @@ module.exports = {
 
                         collector.on('collect', async i => {
                             const selectedSchool = json.schoolInfo[1].row.find(item => item.SD_SCHUL_CODE === i.values[0]);
-                            const atptCode = selectedSchool.ATPT_OFCDC_SC_CODE;
-                            const schoolCode = selectedSchool.SD_SCHUL_CODE;
-                            await fetch(urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date.replace(/-/g, '')}`)
-                                .then(res => res.json())
-                                .then(async json => {
-                                    if (json.mealServiceDietInfo[0].head[0].list_total_count > 0) {
-                                        // const menuEmbed = new EmbedBuilder()
-                                        //     .setColor('#0099ff')
-                                        //     .setTitle(`${json.mealServiceDietInfo[1].row[0].SCHUL_NM}(${json.mealServiceDietInfo[1].row[0].ATPT_OFCDC_SC_NM})의 급식 정보`)
-                                        //     .setDescription(`급식 정보는 ${date}일 기준입니다`)
-                                        //     .setFields(
-                                        //         json.mealServiceDietInfo[1].row.map(item => ({
-                                        //             name: item.MMEAL_SC_NM,
-                                        //             value: item.DDISH_NM.replace(/<br\/>/g, '\n') + "\n",
-                                        //             inline: true
-                                        //         }))
-                                        //     )
-                                        //     .setFooter({text: '급식 정보 제공: 교육청 NEIS API'});
-                                        const menuEmbed = ep.embedBase(
-                                            `${selectedSchool.SCHUL_NM}(${selectedSchool.ATPT_OFCDC_SC_NM})의 급식 정보`, `급식 정보는 ${date}일 기준입니다`
-                                        ).setFields(
-                                            json.mealServiceDietInfo[1].row.map(item => ({
-                                                name: item.MMEAL_SC_NM,
-                                                value: item.DDISH_NM.replace(/<br\/>/g, '\n') + "\n",
-                                                inline: true
-                                            }))
-                                        )
-                                        .setFooter({text: '급식 정보 제공: 교육청 NEIS API'})
-                                        .setURL("https://lunch.overjjang.xyz");
-                                        await interaction.editReply({embeds: [menuEmbed], components: []});
-                                    } else {
-                                        await i.reply(ep.embedBase("급식 정보가 없습니다.", "힉교명과 일자를 확인해주세요",cm.warning).setFooter({text: '급식 정보 제공: 교육청 NEIS API'}));
-                                    }
-                                })
-                                .catch(async err => {
-                                    console.error(err);
-                                    await i.reply(ep.errorEmbed(err));
-                                })
+                            await interaction.editReply(fetchMenu(selectedSchool.ATPT_OFCDC_SC_CODE, selectedSchool.SD_SCHUL_CODE, date));
                         })
                     }
                 } else if ( json.RESULT.CODE === 'INFO-200') {
@@ -167,4 +101,29 @@ module.exports = {
                 interaction.reply(ep.errorEmbed(err));
             });
     }
+}
+
+async function fetchMenu(atptCode, schoolCode, ...date) {
+    await fetch(urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date.replace(/-/g, '')}`)
+        .then(res => res.json())
+        .then(async json => {
+            if (json.mealServiceDietInfo[0].head[0].list_total_count > 0) {
+                return ep.embedBase(
+                    `${selectedSchool.SCHUL_NM}(${selectedSchool.ATPT_OFCDC_SC_NM})의 급식 정보`, `급식 정보는 ${date}일 기준입니다`, cm.success,
+                    json.mealServiceDietInfo[1].row.map(item => ({
+                        name: item.MMEAL_SC_NM,
+                        value: item.DDISH_NM.replace(/<br\/>/g, '\n') + "\n",
+                        inline: true
+                    }))
+                )
+                    .setFooter({text: '급식 정보 제공: 교육청 NEIS API'})
+                    .setURL("https://lunch.overjjang.xyz");
+            } else {
+                return ep.embedBase("급식 정보가 없습니다.", "힉교명과 일자를 확인해주세요",cm.warning).setFooter({text: '급식 정보 제공: 교육청 NEIS API'});
+            }
+        })
+        .catch(async err => {
+            console.error(err);
+            return ep.errorEmbed(err);
+        })
 }

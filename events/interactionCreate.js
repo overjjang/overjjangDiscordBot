@@ -1,4 +1,5 @@
 const { Events, MessageFlags } = require('discord.js');
+const ep = require("../module/embedPrefix")
 
 module.exports = {
     name: Events.InteractionCreate,
@@ -17,9 +18,9 @@ module.exports = {
         } catch (error) {
             console.error(error);
             if (interaction.replied || interaction.deferred) {
-                await interaction.followUp({ content: '오류구아악'});
+                await interaction.followUp({ embeds:[ep.errorEmbed(error.message)]});
             } else {
-                await interaction.reply({ content: '오류구아악'});
+                await interaction.reply({ embeds:[ep.errorEmbed(error.message)]});
             }
         }
     },
