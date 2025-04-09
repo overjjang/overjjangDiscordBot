@@ -1,4 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType } = require('discord.js');
+const ep = require('../../module/embedPrefix.js');
+const cm = require('../../module/color-model.js');
 
 const urlBase = "https://gubsicapi.overjjang.xyz/api";
 
@@ -51,26 +53,21 @@ module.exports = {
                 if (!json.RESULT){
                     // 학교 정보가 1개인 경우
                     if (json.schoolInfo[0].head[0].list_total_count === 1) {
-                        const atptCode = json.schoolInfo[1].row[0].ATPT_OFCDC_SC_CODE;
-                        const schoolCode = json.schoolInfo[1].row[0].SD_SCHUL_CODE;
+                        const atptCode = json.schoolInfo[1].row[0].ATPT_OFCDC_SC_CODE; // 교육청 코드
+                        const schoolCode = json.schoolInfo[1].row[0].SD_SCHUL_CODE; // 학교 코드
+
                         console.log("trying fetch to API: "+urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date.replace(/-/g, '')}`);
+
                         await fetch(urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date.replace(/-/g, '')}`)
                             .then(res => res.json())
                             .then(async json => {
                                 if(!json.mealServiceDietInfo) {
                                     await interaction.reply({embeds:[
-                                        new EmbedBuilder()
-                                            .setColor('#ff2800')
-                                            .setTitle('급식 정보가 없습니다')
-                                            .setDescription('급식 정보가 없습니다')
-                                            .setFooter({text: '급식 정보 제공: 교육청 NEIS API'})
+                                        ep.embedBase("급식 정보가 없습니다", "학교명과 일자를 확인해주세요", cm.warning).setFooter("급식 정보 제공: 교육청 NEIS API")
                                         ]});
                                 }
                                 else if (json.mealServiceDietInfo[0].head[1].RESULT.CODE === 'INFO-000') {
-                                    const menuEmbed = new EmbedBuilder()
-                                        .setColor('#0099ff')
-                                        .setTitle(`${json.mealServiceDietInfo[1].row[0].SCHUL_NM}의 급식 정보`)
-                                        .setDescription(`급식 정보는 ${date}일 기준입니다`)
+                                    const menuEmbed = ep.embedBase(`${json.mealServiceDietInfo[1].row[0].SCHUL_NM}의 급식 정보`, `급식 정보는 ${date}일 기준입니다`)
                                         .setFields(
                                             json.mealServiceDietInfo[1].row.map(item => ({
                                                 name: item.MMEAL_SC_NM,
@@ -82,23 +79,17 @@ module.exports = {
                                     await interaction.reply({embeds: [menuEmbed]});
                                 } else{
                                     await interaction.reply({embeds:[
-                                        new EmbedBuilder()
-                                            .setColor('#ff2800')
-                                            .setTitle('급식 정보가 없습니다')
-                                            .setDescription('급식 정보가 없습니다')
+                                        ep.embedBase("급식 정보가 없습니다", "학교명과 일자를 확인해주세요", cm.warning)
                                             .setFooter({text: '급식 정보 제공: 교육청 NEIS API'})
                                         ]});
                                 }
                             })
                             .catch(async err => {
                                 console.error(err);
-                                await interaction.reply("서버와의 통신 중 오류 발생");
+                                await interaction.reply();
                             })
                     } else { // 학교 정보가 여러개인 경우
-                        const schoolEmbed = new EmbedBuilder()
-                            .setColor('#0099ff')
-                            .setTitle(`"${interaction.options.getString('학교이름')}"단어가 들어간 학교가 여러개입니다`)
-                            .setDescription('다음 중 선택해주세요')
+                        const schoolEmbed = ep.embedBase(`"${interaction.options.getString('학교이름')}" 단어가 들어간 학교가 여러개입니다`, '다음 중 선택해주세요')
                             .setFields(
                                 json.schoolInfo[1].row.map(item => ({
                                     name: item.SCHUL_NM,
@@ -131,38 +122,49 @@ module.exports = {
                                 .then(res => res.json())
                                 .then(async json => {
                                     if (json.mealServiceDietInfo[0].head[0].list_total_count > 0) {
-                                        const menuEmbed = new EmbedBuilder()
-                                            .setColor('#0099ff')
-                                            .setTitle(`${json.mealServiceDietInfo[1].row[0].SCHUL_NM}(${json.mealServiceDietInfo[1].row[0].ATPT_OFCDC_SC_NM})의 급식 정보`)
-                                            .setDescription(`급식 정보는 ${date}일 기준입니다`)
-                                            .setFields(
-                                                json.mealServiceDietInfo[1].row.map(item => ({
-                                                    name: item.MMEAL_SC_NM,
-                                                    value: item.DDISH_NM.replace(/<br\/>/g, '\n') + "\n",
-                                                    inline: true
-                                                }))
-                                            )
-                                            .setFooter({text: '급식 정보 제공: 교육청 NEIS API'});
+                                        // const menuEmbed = new EmbedBuilder()
+                                        //     .setColor('#0099ff')
+                                        //     .setTitle(`${json.mealServiceDietInfo[1].row[0].SCHUL_NM}(${json.mealServiceDietInfo[1].row[0].ATPT_OFCDC_SC_NM})의 급식 정보`)
+                                        //     .setDescription(`급식 정보는 ${date}일 기준입니다`)
+                                        //     .setFields(
+                                        //         json.mealServiceDietInfo[1].row.map(item => ({
+                                        //             name: item.MMEAL_SC_NM,
+                                        //             value: item.DDISH_NM.replace(/<br\/>/g, '\n') + "\n",
+                                        //             inline: true
+                                        //         }))
+                                        //     )
+                                        //     .setFooter({text: '급식 정보 제공: 교육청 NEIS API'});
+                                        const menuEmbed = ep.embedBase(
+                                            `${selectedSchool.SCHUL_NM}(${selectedSchool.ATPT_OFCDC_SC_NM})의 급식 정보`, `급식 정보는 ${date}일 기준입니다`
+                                        ).setFields(
+                                            json.mealServiceDietInfo[1].row.map(item => ({
+                                                name: item.MMEAL_SC_NM,
+                                                value: item.DDISH_NM.replace(/<br\/>/g, '\n') + "\n",
+                                                inline: true
+                                            }))
+                                        )
+                                        .setFooter({text: '급식 정보 제공: 교육청 NEIS API'})
+                                        .setURL("https://lunch.overjjang.xyz");
                                         await interaction.editReply({embeds: [menuEmbed], components: []});
                                     } else {
-                                        await i.reply("급식 정보가 없습니다");
+                                        await i.reply(ep.embedBase("급식 정보가 없습니다.", "힉교명과 일자를 확인해주세요",cm.warning).setFooter({text: '급식 정보 제공: 교육청 NEIS API'}));
                                     }
                                 })
                                 .catch(async err => {
                                     console.error(err);
-                                    await i.reply("서버와의 통신 중 오류 발생");
+                                    await i.reply(ep.errorEmbed(err));
                                 })
                         })
                     }
                 } else if ( json.RESULT.CODE === 'INFO-200') {
-                    interaction.reply("검색된 학교가 없습니다. 학교 이름을 다시 확인해주세요");
+                    interaction.reply({embeds: [ep.embedBase("학교 정보가 없습니다", "학교명을 확인해주세요", cm.warning).setFooter({text: '급식 정보 제공: 교육청 NEIS API'})]});
                 } else {
-                    interaction.reply("오류가 발생했습니다. 다시 시도해주세요");
+                    interaction.reply(ep.errorEmbed(json.RESULT));
                 }
             })
             .catch(err => {
                 console.error(err);
-                interaction.reply("서버와의 통신 중 오류 발생");
+                interaction.reply(ep.errorEmbed(err));
             });
     }
 }

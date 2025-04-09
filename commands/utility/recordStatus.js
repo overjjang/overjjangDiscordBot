@@ -1,5 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const dotenv = require('dotenv');
+const ep = require('../../module/embedPrefix.js');
+const cm = require('../../module/color-model.js');
 
 dotenv.config();
 
@@ -20,10 +22,7 @@ module.exports = {
         await fetch(process.env.RECORD_STATUS)
             .then(res => res.json())
             .then(json => {
-                    const stateEmbed= new EmbedBuilder()
-                        .setColor('#0099ff')
-                        .setTitle('데이터 수집 상태:'+json.cronTasks.isOn ? `On 🟩 | ${json.cronTasks.time}분 마다` : 'Off 🟥')
-                        .setDescription('데이터 수집 상태를 확인합니다')
+                    const stateEmbed= ep.embedBase(`데이터 수집 상태:${json.cronTasks.isOn ? `On 🟩 | ${json.cronTasks.time}분 마다` : 'Off 🟥'}`,"데이터 수집 상태를 확인합니다")
                         .setFields(
                             json.serverNames.map((item, index) => ({
                                 name: item,
@@ -34,7 +33,7 @@ module.exports = {
             })
             .catch(err => {
                 console.error(err);
-                interaction.reply("서버와의 통신 중 오류 발생");
+                interaction.reply({embeds:[ep.errorEmbed(err)]});
             });
     }
 }
