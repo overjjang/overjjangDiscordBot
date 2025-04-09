@@ -1,13 +1,17 @@
 const {EmbedBuilder} = require('discord.js');
-const cm = require('color-model');
+const cm = require('./color-model');
 
 const prefixEmbed = {
-    errorEmbed: (title="⚠ERROR", description) =>
+    embedBase: (title,description,color=cm.success) =>
+        new EmbedBuilder()
+            .setColor(color)
+            .setTitle(title)
+            .setDescription(description),
+    errorEmbed: (description) =>
         new EmbedBuilder()
             .setColor(cm.danger)
-            .setTitle(title)
-            .setDescription(description)
-
+            .setTitle("⚠ERROR")
+            .setDescription(description),
 };
 
-module.exports = {prefixEmbed};
+module.exports = prefixEmbed;
