@@ -119,7 +119,7 @@ async function fetchMenu(atptCode, schoolCode, date, ...display_atpt) {
                         inline: true
                     }))
                 );
-                return embed.setFooter({ text: '급식 정보 제공: 교육청 NEIS API' }).setURL("https://lunch.overjjang.xyz");
+                return embed.setFooter({ text: '급식 정보 제공: 교육청 NEIS API' }).setURL(`https://lunch.overjjang.xyz?schoolCode=${schoolCode}&atptCode=${atptCode}&date=${date}`);
             } else {
                 return ep.embedBase("급식 정보가 없습니다.", "학교명과 일자를 확인해주세요", cm.warning)
                     .setFooter({ text: '급식 정보 제공: 교육청 NEIS API' });
