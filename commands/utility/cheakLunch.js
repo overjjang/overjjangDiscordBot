@@ -49,26 +49,24 @@ module.exports = {
         await fetch(urlBase + `?mode=name&schoolName=${schoolName}`)
             .then(res => res.json())
             .then(async json => {
-                const date = interaction.options.getString('날짜') ? new Date(interaction.options.getString('날짜')).toISOString().slice(0, 10) : new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+                const date = interaction.options.getString('날짜') ? new Date(interaction.options.getString('날짜')).toISOString().slice(0, 10).replace(/-/g, '') : new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10).replace(/-/g, '');
+                date.replace(/-/g, '')
                 if (!json.RESULT){
                     // 학교 정보가 1개인 경우
                     if (json.schoolInfo[0].head[0].list_total_count === 1) {
                         const atptCode = json.schoolInfo[1].row[0].ATPT_OFCDC_SC_CODE; // 교육청 코드
                         const schoolCode = json.schoolInfo[1].row[0].SD_SCHUL_CODE; // 학교 코드
-
-                        console.log("trying fetch to API: "+urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date.replace(/-/g, '')}`);
-
-                        await interaction.reply({embeds:[await fetchMenu(atptCode, schoolCode, date)]});
+                        const embed = await fetchMenu(atptCode, schoolCode, date);
+                        await interaction.reply({embeds:[embed]});
                     } else { // 학교 정보가 여러개인 경우
-                        const schoolEmbed = ep.embedBase(`"${interaction.options.getString('학교이름')}" 단어가 들어간 학교가 여러개입니다`, '다음 중 선택해주세요')
-                            .setFields(
+                        const schoolEmbed = await ep.embedBase(`"${interaction.options.getString('학교이름')}" 단어가 들어간 학교가 여러개입니다`, '다음 중 선택해주세요', cm.success,
                                 json.schoolInfo[1].row.map(item => ({
                                     name: item.SCHUL_NM,
                                     value: item.ORG_RDNMA.replace(/<br\/>/g, '\n') + "\n",
                                     inline: true
                                 }))
-                            )
-                            .setFooter({ text: '학교 정보 제공: 교육청 NEIS API' });
+                            );
+                            schoolEmbed.setFooter({ text: '학교 정보 제공: 교육청 NEIS API' });
                         const schoolSelect = new StringSelectMenuBuilder()
                             .setCustomId('schoolSelect')
                             .setPlaceholder('학교 선택')
@@ -87,11 +85,11 @@ module.exports = {
 
                         collector.on('collect', async i => {
                             const selectedSchool = json.schoolInfo[1].row.find(item => item.SD_SCHUL_CODE === i.values[0]);
-                            await interaction.editReply(fetchMenu(selectedSchool.ATPT_OFCDC_SC_CODE, selectedSchool.SD_SCHUL_CODE, date));
+                            await interaction.editReply({embeds:[await fetchMenu(selectedSchool.ATPT_OFCDC_SC_CODE,selectedSchool.SD_SCHUL_CODE, date,true)],components:[]});
                         })
                     }
                 } else if ( json.RESULT.CODE === 'INFO-200') {
-                    interaction.reply({embeds: [ep.embedBase("학교 정보가 없습니다", "학교명을 확인해주세요", cm.warning).setFooter({text: '급식 정보 제공: 교육청 NEIS API'})]});
+                    interaction.reply({embeds: [await ep.embedBase("학교 정보가 없습니다", "학교명을 확인해주세요", cm.warning).setFooter({text: '급식 정보 제공: 교육청 NEIS API'})]});
                 } else {
                     interaction.reply(ep.errorEmbed(json.RESULT));
                 }
@@ -103,27 +101,32 @@ module.exports = {
     }
 }
 
-async function fetchMenu(atptCode, schoolCode, ...date) {
-    await fetch(urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date.replace(/-/g, '')}`)
+async function fetchMenu(atptCode, schoolCode, date, ...display_atpt) {
+    display_atpt = display_atpt[0] || false;
+    console.log("trying fetch to API: " + urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date}`);
+    return await fetch(urlBase + `?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date}`)
         .then(res => res.json())
         .then(async json => {
-            if (json.mealServiceDietInfo[0].head[0].list_total_count > 0) {
-                return ep.embedBase(
-                    `${selectedSchool.SCHUL_NM}(${selectedSchool.ATPT_OFCDC_SC_NM})의 급식 정보`, `급식 정보는 ${date}일 기준입니다`, cm.success,
+            if (json.mealServiceDietInfo && json.mealServiceDietInfo[0].head[0].list_total_count > 0) {
+                const selectedSchool = json.mealServiceDietInfo[1].row[0];
+                const embed = await ep.embedBase(
+                    `${selectedSchool.SCHUL_NM}${display_atpt ? "("+selectedSchool.ATPT_OFCDC_SC_NM+")" : ""}의 급식 정보`,
+                    `급식 정보는 ${date.slice(0, 4)}년 ${date.slice(4, 6)}월 ${date.slice(6, 8)}일 기준입니다`,
+                    cm.success,
                     json.mealServiceDietInfo[1].row.map(item => ({
                         name: item.MMEAL_SC_NM,
                         value: item.DDISH_NM.replace(/<br\/>/g, '\n') + "\n",
                         inline: true
                     }))
-                )
-                    .setFooter({text: '급식 정보 제공: 교육청 NEIS API'})
-                    .setURL("https://lunch.overjjang.xyz");
+                );
+                return embed.setFooter({ text: '급식 정보 제공: 교육청 NEIS API' }).setURL("https://lunch.overjjang.xyz");
             } else {
-                return ep.embedBase("급식 정보가 없습니다.", "힉교명과 일자를 확인해주세요",cm.warning).setFooter({text: '급식 정보 제공: 교육청 NEIS API'});
+                return ep.embedBase("급식 정보가 없습니다.", "학교명과 일자를 확인해주세요", cm.warning)
+                    .setFooter({ text: '급식 정보 제공: 교육청 NEIS API' });
             }
         })
-        .catch(async err => {
+        .catch(err => {
             console.error(err);
-            return ep.errorEmbed(err);
-        })
+            return ep.errorEmbed(err); // 명시적으로 반환
+        });
 }
