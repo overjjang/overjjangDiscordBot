@@ -46,7 +46,7 @@ module.exports = {
     data: data,
     async execute(interaction) {
         const schoolName = interaction.options.getString('학교이름');
-        interaction.deferReply()
+        await interaction.deferReply()
         await fetch(urlBase + `?mode=name&schoolName=${schoolName}`)
             .then(res => res.json())
             .then(async json => {
