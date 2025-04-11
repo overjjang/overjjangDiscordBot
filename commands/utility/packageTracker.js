@@ -3,21 +3,20 @@ const fs = require('fs');
 const path = require('path');
 const ep = require('../../modules/embedPrefix');
 const cm = require('../../modules/color-model');
+const fh = require('../../modules/fetchHelper');
 
 // JSON 파일 경로 설정
 const jsonPath = path.join(__dirname, '../../companyList.json');
 
 // JSON 파일 읽기
-function readJsonFile() {
-    if (fs.existsSync(jsonPath)) {
-        const data = fs.readFileSync(jsonPath, 'utf8');
-        return JSON.parse(data);
-    } else {
-        return { Company: [] };
-    }
+function readJsonFile(query) {
+    if(!fs.existsSync(jsonPath)) return [];
+    const data = fs.readFileSync(jsonPath, 'utf8');
+    const parsedData = JSON.parse(data);
+    const companyList = parsedData.Company
+    return companyList.filter(company => company.Name.toLowerCase().includes(query.toLowerCase())).slice(0,25);
 }
 
-const companyList = readJsonFile().Company;
 
 const data = new SlashCommandBuilder()
 .setName("운송장")
@@ -51,6 +50,7 @@ const data = new SlashCommandBuilder()
                     }
                 )
                 .setRequired(true)
+                .setAutocomplete(true)
         )
         .addStringOption(
         option =>
@@ -71,50 +71,45 @@ const data = new SlashCommandBuilder()
 
 module.exports = {
     data: data,
+    async autocomplete(interaction) {
+        const focusedValue = interaction.options.getFocused(); // 사용자가 입력한 값
+        const filteredCompanies = readJsonFile(focusedValue); // 필터링된 회사 목록 가져오기
+        await interaction.respond(
+            filteredCompanies.map(company => ({
+                name: company.Name,
+                value: company.Code, // 선택 시 사용할 값
+            }))
+        );
+    },
     async execute(interaction) {
         const subcommand = interaction.options.getSubcommand();
         if (subcommand === "조회") {
-            const companyNameInput = interaction.options.getString('운송회사').toLowerCase();
-            const filteredCompanies = companyList.filter(company => company.Name.toLowerCase().includes(companyNameInput));
-
-            if (filteredCompanies.length === 1) {
-                const companyCode = filteredCompanies[0].Code;
-                const trackingNumber = interaction.options.getString('운송장번호');
-                await fetch(`https://gubsicapi.overjjang.xyz/api?mode=package&companyCode=${companyCode}&packageCode=${trackingNumber}`)
-                    .then(res => res.json())
-                    .then(async json => {
-                        if (!json.code){
-                            const embed = ep.embedBase(`운송장 조회 결과`, "운송장 조회 결과", cm.success,
-                                    json.trackingDetails.map((item, index) => ({
-                                        name: json.trackingDetails[index].kind,
-                                        value: `위치:${json.trackingDetails[index].where} | 시간:${json.trackingDetails[index].timeString}`
-                                    }))
-                                )
-                            await interaction.reply({embeds: [embed]});
-                        } else{
-                            await interaction.reply({embeds:[ep.warningEmbed(json.code + " | " + json.msg)]});
-                        }
-                    });
-
-            } else if (filteredCompanies.length > 1) {
-                const select = new StringSelectMenuBuilder()
-                    .setCustomId('company')
-                    .setPlaceholder('택배사를 선택해주세요')
-                    .addOptions(
-                        filteredCompanies.map(company =>
-                            new StringSelectMenuOptionBuilder()
-                                .setLabel(company.Name)
-                                .setValue(company.Code)
-                        )
+            const companyCode = interaction.options.getString('운송회사');
+            const trackingNumber = interaction.options.getString('운송장번호');
+            await interaction.deferReply();
+            try{
+                const response = await fh.fetchData(
+                    `https://gubsicapi.overjjang.xyz/api?mode=package&companyCode=${companyCode}&packageCode=${trackingNumber}`
+                )
+                if (!response.code) {
+                    // 성공적으로 조회된 경우
+                    const embed = await ep.embedBase(
+                        `운송장 조회 결과`,
+                        '운송장 조회 결과',
+                        cm.success,
+                        response.trackingDetails.map((item, index) => ({
+                            name: response.trackingDetails[index].kind,
+                            value: `위치:${response.trackingDetails[index].where} | 시간:${response.trackingDetails[index].timeString}`
+                        }))
                     );
-                const row = new ActionRowBuilder().addComponents(select);
-                const embed = new EmbedBuilder()
-                    .setColor("#0099ff")
-                    .setTitle("택배사를 선택해주세요");
-
-                await interaction.reply({ embeds: [embed], components: [row] });
-            } else {
-                await interaction.reply({embeds:[ep.warningEmbed("운송회사를 찾을 수 없습니다.")]});
+                    await interaction.editReply({ embeds: [embed] });
+                } else {
+                    // API에서 오류가 반환된 경우
+                    await interaction.editReply({ embeds: [ep.warningEmbed(`${response.code} | ${response.msg}`)] });
+                }
+            } catch (error) {
+                console.error('Error fetching package details:', error);
+                await interaction.editReply({ embeds: [ep.errorEmbed('운송장 조회 중 오류가 발생했습니다. 다시 시도해주세요!')] });
             }
         }
     }
