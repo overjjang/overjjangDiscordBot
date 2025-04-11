@@ -1,8 +1,8 @@
 const {SlashCommandBuilder, EmbedBuilder,StringSelectMenuBuilder,StringSelectMenuOptionBuilder,ActionRowBuilder} = require('discord.js');
 const fs = require('fs');
 const path = require('path');
-const ep = require('../../module/embedPrefix');
-const cm = require('../../module/color-model');
+const ep = require('../../modules/embedPrefix');
+const cm = require('../../modules/color-model');
 
 // JSON 파일 경로 설정
 const jsonPath = path.join(__dirname, '../../companyList.json');

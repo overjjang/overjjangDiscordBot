@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType, AttachmentBuilder,ButtonBuilder,ButtonStyle } = require('discord.js');
 const dotenv = require('dotenv');
-const ep = require('../../module/embedPrefix');
-const cm = require('../../module/color-model');
+const ep = require('../../modules/embedPrefix');
+const cm = require('../../modules/color-model');
 
 dotenv.config();
 

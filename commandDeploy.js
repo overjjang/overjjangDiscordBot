@@ -31,7 +31,7 @@ const deployCommands = () => {
         }
     }
 
-// Construct and prepare an instance of the REST module
+// Construct and prepare an instance of the REST modules
     const rest = new REST().setToken(token);
 
 

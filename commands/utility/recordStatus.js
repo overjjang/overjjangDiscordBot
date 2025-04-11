@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const dotenv = require('dotenv');
-const ep = require('../../module/embedPrefix.js');
-const cm = require('../../module/color-model.js');
+const ep = require('../../modules/embedPrefix.js');
+const cm = require('../../modules/color-model.js');
 
 dotenv.config();
 

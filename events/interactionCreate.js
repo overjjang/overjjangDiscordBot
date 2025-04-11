@@ -1,5 +1,5 @@
 const { Events, MessageFlags } = require('discord.js');
-const ep = require("../module/embedPrefix")
+const ep = require("../modules/embedPrefix")
 
 module.exports = {
     name: Events.InteractionCreate,
