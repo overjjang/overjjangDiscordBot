@@ -57,7 +57,7 @@ module.exports = {
                         const atptCode = json.schoolInfo[1].row[0].ATPT_OFCDC_SC_CODE; // 교육청 코드
                         const schoolCode = json.schoolInfo[1].row[0].SD_SCHUL_CODE; // 학교 코드
                         const embed = await fetchMenu(atptCode, schoolCode, date);
-                        await interaction.reply({embeds:[embed]});
+                        await interaction.editReply({embeds:[embed]});
                     } else { // 학교 정보가 여러개인 경우
                         const schoolEmbed = await ep.embedBase(`"${interaction.options.getString('학교이름')}" 단어가 들어간 학교가 여러개입니다`, '다음 중 선택해주세요', cm.success,
                                 json.schoolInfo[1].row.map(item => ({
@@ -79,7 +79,7 @@ module.exports = {
                             )
                         const row = new ActionRowBuilder()
                             .setComponents(schoolSelect);
-                        const response = await interaction.reply({ embeds: [schoolEmbed] , components: [row] });
+                        const response = await interaction.editReply({ embeds: [schoolEmbed] , components: [row] });
 
                         const collector = response.createMessageComponentCollector({ componentType: ComponentType.StringSelect, time: 3_600_000 });
 
@@ -89,14 +89,14 @@ module.exports = {
                         })
                     }
                 } else if ( json.RESULT.CODE === 'INFO-200') {
-                    interaction.reply({embeds: [await ep.embedBase("학교 정보가 없습니다", "학교명을 확인해주세요", cm.warning).setFooter({text: '급식 정보 제공: 교육청 NEIS API'})]});
+                    interaction.editReply({embeds: [await ep.embedBase("학교 정보가 없습니다", "학교명을 확인해주세요", cm.warning).setFooter({text: '급식 정보 제공: 교육청 NEIS API'})]});
                 } else {
-                    interaction.reply(ep.errorEmbed(json.RESULT));
+                    interaction.editReply(ep.errorEmbed(json.RESULT));
                 }
             })
             .catch(err => {
                 console.error(err);
-                interaction.reply(ep.errorEmbed(err));
+                interaction.editReply(ep.errorEmbed(err));
             });
     }
 }
