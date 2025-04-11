@@ -50,7 +50,6 @@ module.exports = {
             .then(res => res.json())
             .then(async json => {
                 const date = interaction.options.getString('날짜') ? new Date(interaction.options.getString('날짜')).toISOString().slice(0, 10).replace(/-/g, '') : new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10).replace(/-/g, '');
-                date.replace(/-/g, '')
                 if (!json.RESULT){
                     // 학교 정보가 1개인 경우
                     if (json.schoolInfo[0].head[0].list_total_count === 1) {
