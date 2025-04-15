@@ -50,7 +50,7 @@ module.exports = {
                     return interaction.editReply({ embeds: [menuEmbed] });
                 } else {
                     // 여러 학교가 검색된 경우
-                    const embed = createEmbed(
+                    const embed =await createEmbed(
                         `"${schoolName}" 단어가 포함된 학교 목록`,
                         '다음 중 선택해주세요',
                         cm.info,
@@ -79,12 +79,12 @@ module.exports = {
 
                     collector.on('collect', async i => {
                         const selectedSchool = schoolList.find(item => item.SD_SCHUL_CODE === i.values[0]);
-                        const menuEmbed = await fetchMenu(selectedSchool.ATPT_OFCDC_SC_CODE, selectedSchool.SD_SCHUL_CODE, date);
+                        const menuEmbed = await fetchMenu(selectedSchool.ATPT_OFCDC_SC_CODE, selectedSchool.SD_SCHUL_CODE, date,true);
                         await interaction.editReply({ embeds: [menuEmbed], components: [] });
                     });
                 }
             } else if (schoolResponse.RESULT.CODE === 'INFO-200') {
-                return interaction.editReply({ embeds: [createEmbed('학교 정보가 없습니다', '학교명을 확인해주세요', cm.warning)] });
+                return interaction.editReply({ embeds: [await createEmbed('학교 정보가 없습니다', '학교명을 확인해주세요', cm.warning)] });
             } else {
                 return interaction.editReply({ embeds: [ep.errorEmbed(schoolResponse.RESULT)] });
             }
@@ -96,22 +96,24 @@ module.exports = {
 };
 
 // 급식 정보 가져오기
-async function fetchMenu(atptCode, schoolCode, date) {
+async function fetchMenu(atptCode, schoolCode, date, display_atpt = false) {
     const menuUrl = `${urlBase}?mode=menu&atptCode=${atptCode}&schoolCode=${schoolCode}&date=${date}`;
     const menuResponse = await fh.fetchData(menuUrl);
 
     if (menuResponse.mealServiceDietInfo && menuResponse.mealServiceDietInfo[0].head[0].list_total_count > 0) {
         const schoolData = menuResponse.mealServiceDietInfo[1].row;
-        return createEmbed(
-            `급식 정보`,
-            `${date.slice(0, 4)}년 ${date.slice(4, 6)}월 ${date.slice(6, 8)}일`,
+        const embed = await createEmbed(
+            `${schoolData[0].SCHUL_NM}${display_atpt ? "(" + schoolData[0].ATPT_OFCDC_SC_NM + ")" : ""}의 급식 정보`,
+            `급식 정보는 ${date.slice(0, 4)}년 ${date.slice(4, 6)}월 ${date.slice(6, 8)}일 기준입니다`,
             cm.success,
             schoolData.map(item => ({
                 name: item.MMEAL_SC_NM,
                 value: item.DDISH_NM.replace(/<br\/>/g, '\n'),
                 inline: true
             }))
-        );
+        )
+        embed.setURL(`https://lunch.overjjang.xyz?schoolCode=${schoolCode}&atptCode=${atptCode}&date=${date}`);
+        return embed
     } else {
         return createEmbed('급식 정보가 없습니다', '학교명과 일자를 확인해주세요.', cm.warning);
     }
