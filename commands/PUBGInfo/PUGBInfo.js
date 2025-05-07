@@ -250,7 +250,7 @@ module.exports = {
                         //     })
                         // }
                         if (!json.data) {
-                            await interaction.reply(
+                            await interaction.editReply(
                                 {
                                     embeds: [new EmbedBuilder()
                                         .setColor('#ff0000')
