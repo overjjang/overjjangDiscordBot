@@ -52,7 +52,8 @@ module.exports = {
                 .setAccentColor(0x00ffff);
             interaction.editReply({
                 flags: MessageFlags.IsComponentsV2,
-                components: [container]
+                components: [container],
+                ephemeral: false
             })
         });
     }
