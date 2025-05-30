@@ -25,7 +25,6 @@ module.exports = {
             {
                 flags: MessageFlags.IsComponentsV2,
                 components: [container],
-                ephemeral: true
             }
         )
         const collector = response.createMessageComponentCollector({
@@ -33,6 +32,7 @@ module.exports = {
             time: 60000, // 1분
         });
         collector.on('collect', async (collectedInteraction) => {
+            if (collectedInteraction.user.id !== interaction.user.id) return collectedInteraction.reply({ content: "이 명령어는 당신을 위해 만들어진 것이 아닙니다.(<--코파일럿이 씀 ㄷㄷ)", ephemeral: true });
             const user = collectedInteraction.values[0];
             const userProfile = collectedInteraction.guild.members.cache.get(user)?.user.displayAvatarURL({ size: 256, dynamic: true }) || collectedInteraction.guild.members.cache.get(user)?.user.defaultAvatarURL;
             const userName = collectedInteraction.guild.members.cache.get(user)?.user.username || "Unknown User";
@@ -53,7 +53,6 @@ module.exports = {
             interaction.editReply({
                 flags: MessageFlags.IsComponentsV2,
                 components: [container],
-                ephemeral: false
             })
         });
     }
