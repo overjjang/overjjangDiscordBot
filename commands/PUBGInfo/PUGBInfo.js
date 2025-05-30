@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType, AttachmentBuilder,ButtonBuilder,ButtonStyle } = require('discord.js');
+const { MessageFlags, SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType, AttachmentBuilder,ButtonBuilder,ButtonStyle, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder } = require('discord.js');
 const dotenv = require('dotenv');
 const ep = require('../../modules/embedPrefix');
 const cm = require('../../modules/color-model');
@@ -129,37 +129,78 @@ async function getPlayerData(nickName,playerID, mode, season, platform, moreStat
                 vehicleDestroys: aggregated.vehicleDestroys
             };
         })
-        const embed = await ep.embedBase(
-            `${nickName}님의 전적 정보`,
-            `플렛폼: ${platform}\n모드: ${embedData.mode === 'lifetime' ? '전체' : embedData.mode}`,
-            cm.success,
-            [
-                { name: "🔫 킬 / 다운 / 어시스트", value: `${embedData.kills}킬 / ${embedData.DBNOs}다운 / ${embedData.assists}어시`, inline: false },
-                { name: "🍗 / top10 / 라운드", value: `${embedData.wins} / ${embedData.top10s} / ${embedData.roundsPlayed}`, inline: false },
-                { name: "❌ 헤드샷 킬 / 비율", value: `${embedData.headshotKills} / ${(embedData.headshotKills / embedData.kills).toFixed(2)}%`, inline: false },
-                { name: "🚙 고라니", value: embedData.roadKills.toString(), inline: true },
-                { name: "😜 팀킬", value: embedData.teamKills.toString(), inline: true },
-                { name: "🏥 팀원 소생", value: embedData.revives.toString(), inline: true }
-            ]
-        );
+    //     const embed = await ep.embedBase(
+    //         `${nickName}님의 전적 정보`,
+    //         `플렛폼: ${platform}\n모드: ${embedData.mode === 'lifetime' ? '전체' : embedData.mode}`,
+    //         cm.success,
+    //         [
+    //             { name: "🔫 킬 / 다운 / 어시스트", value: `${embedData.kills}킬 / ${embedData.DBNOs}다운 / ${embedData.assists}어시`, inline: false },
+    //             { name: "🍗 / top10 / 라운드", value: `${embedData.wins} / ${embedData.top10s} / ${embedData.roundsPlayed}`, inline: false },
+    //             { name: "❌ 헤드샷 킬 / 비율", value: `${embedData.headshotKills} / ${(embedData.headshotKills / embedData.kills).toFixed(2)}%`, inline: false },
+    //             { name: "🚙 고라니", value: embedData.roadKills.toString(), inline: true },
+    //             { name: "😜 팀킬", value: embedData.teamKills.toString(), inline: true },
+    //             { name: "🏥 팀원 소생", value: embedData.revives.toString(), inline: true }
+    //         ]
+    //     );
+    //
+    //     if (moreStats) {
+    //         embed.addFields(
+    //             {
+    //                 name: "⏱생존 시간 / 라운드 평균",
+    //                 value: `${(embedData.timeSurvived / 60).toFixed(2).toString()}분 / ${(embedData.timeSurvived / embedData.roundsPlayed / 60).toFixed(2)}분`
+    //             },
+    //             {name: "🚑 부스트 / 힐 아이템", value: `${embedData.boosts} / ${embedData.heals}`, inline: true},
+    //             {name: "🔫 무기 획득", value: embedData.weaponsAcquired.toString(), inline: true},
+    //             {name: "🚙 차량 파괴", value: embedData.vehicleDestroys.toString(), inline: true},
+    //             {name: "😎 승률", value: ((embedData.wins / embedData.roundsPlayed) * 100).toFixed(2).toString() + "%"},
+    //             {name: "평균 킬", value: (embedData.kills / embedData.roundsPlayed).toFixed(2).toString(), inline: true},
+    //             {name: "평균 데미지", value: (embedData.damageDealt / embedData.roundsPlayed).toFixed(2).toString(), inline: true},
+    //             {name: "평균 어시스트", value: (embedData.assists / embedData.roundsPlayed).toFixed(2).toString(), inline: true}
+    //         );
+    //     }
+    // embed.setFooter({ text: '데이터 제공: PUBG API' }).setTimestamp().setFooter({text:'데이터 제공: PUBG API'}).setTimestamp();
+    // 구분선 컴포넌트 생성
+    const separator = new SeparatorBuilder().setSpacing(2);
+    const defaultSeparator = new SeparatorBuilder();
 
-        if (moreStats) {
-            embed.addFields(
-                {
-                    name: "⏱생존 시간 / 라운드 평균",
-                    value: `${(embedData.timeSurvived / 60).toFixed(2).toString()}분 / ${(embedData.timeSurvived / embedData.roundsPlayed / 60).toFixed(2)}분`
-                },
-                {name: "🚑 부스트 / 힐 아이템", value: `${embedData.boosts} / ${embedData.heals}`, inline: true},
-                {name: "🔫 무기 획득", value: embedData.weaponsAcquired.toString(), inline: true},
-                {name: "🚙 차량 파괴", value: embedData.vehicleDestroys.toString(), inline: true},
-                {name: "😎 승률", value: ((embedData.wins / embedData.roundsPlayed) * 100).toFixed(2).toString() + "%"},
-                {name: "평균 킬", value: (embedData.kills / embedData.roundsPlayed).toFixed(2).toString(), inline: true},
-                {name: "평균 데미지", value: (embedData.damageDealt / embedData.roundsPlayed).toFixed(2).toString(), inline: true},
-                {name: "평균 어시스트", value: (embedData.assists / embedData.roundsPlayed).toFixed(2).toString(), inline: true}
-            );
-        }
-    embed.setFooter({ text: '데이터 제공: PUBG API' }).setTimestamp().setFooter({text:'데이터 제공: PUBG API'}).setTimestamp();
-    return embed;
+    // 텍스트 컴포넌트 생성
+    const textComponents = [
+        new TextDisplayBuilder().setContent(`## ${nickName}님의 전적 정보\n플렛폼: ${platform}\n모드: ${embedData.mode === 'lifetime' ? '전체' : embedData.mode}`),
+        new TextDisplayBuilder().setContent(`### 🔫 Kill / Down / Assist\n${embedData.kills}킬 / ${embedData.DBNOs}다운 / ${embedData.assists}어시`),
+        new TextDisplayBuilder().setContent(`### 🍗 승리 / 탑10 / 라운드\n ${embedData.wins}승 / ${embedData.top10s}회 / ${embedData.roundsPlayed}라운드`),
+        new TextDisplayBuilder().setContent(`### ❌ 헤드샷 킬\n${embedData.headshotKills}킬 / ${(embedData.headshotKills / embedData.kills * 100).toFixed(2)}%`),
+    ];
+
+    // 컨테이너에 컴포넌트 추가
+    const container = new ContainerBuilder()
+        .addTextDisplayComponents(textComponents[0])
+        .addSeparatorComponents(separator)
+        .addTextDisplayComponents(textComponents[1])
+        .addSeparatorComponents(defaultSeparator)
+        .addTextDisplayComponents(textComponents[2])
+        .addSeparatorComponents(defaultSeparator)
+        .addTextDisplayComponents(textComponents[3])
+        .addSeparatorComponents(defaultSeparator)
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`⌚ 생존 시간 / 라운드 평균\n${(embedData.timeSurvived / 60).toFixed(2)}min / ${(embedData.timeSurvived / embedData.roundsPlayed / 60).toFixed(2)}min`))
+        .setAccentColor(0xffff00)
+    if (moreStats) {
+        container
+            .addSeparatorComponents(defaultSeparator)
+            .addSeparatorComponents(defaultSeparator)
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`고라니: ${embedData.roadKills} \n팀킬: ${embedData.teamKills}\n팀원 소생: ${embedData.revives}`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`부스트 아이템 사용: ${embedData.boosts} \n힐 아이템 사용:${embedData.heals}`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`무기 획득: ${embedData.weaponsAcquired}`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`차량 파괴: ${embedData.vehicleDestroys}`))
+            .addSeparatorComponents(defaultSeparator)
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`승률: ${((embedData.wins / embedData.roundsPlayed) * 100).toFixed(2)}%`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`탑10 비율: ${((embedData.top10s / embedData.roundsPlayed) * 100).toFixed(2)}%`))
+            .addSeparatorComponents(defaultSeparator)
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`평균 킬: ${(embedData.kills / embedData.roundsPlayed).toFixed(2)}`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`평균 데미지: ${(embedData.damageDealt / embedData.roundsPlayed).toFixed(2)}`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`평균 어시스트: ${(embedData.assists / embedData.roundsPlayed).toFixed(2)}`));
+    }
+
+    return container
 }
 
 
@@ -260,17 +301,20 @@ module.exports = {
                             );
                         } else if (json.data.length === 1) {
                             const playerId = json.data[0].id;
-                            const embed = await getPlayerData(nickname, playerId, mode, 'lifetime', platform);
+                            const container = await getPlayerData(nickname, playerId, mode, 'lifetime', platform);
                             const moreStateButton = new ButtonBuilder()
                                 .setEmoji("📊")
-                                .setLabel("더보기")
+                                .setLabel("더보기 ▽")
                                 .setStyle(ButtonStyle.Secondary)
                                 .setCustomId("moreStats");
                             const moreStateActionRow = new ActionRowBuilder()
-                                .addComponents(moreStateButton);
+                                .addComponents(moreStateButton)
+                            container
+                                .addActionRowComponents(moreStateActionRow)
+                                .addTextDisplayComponents(new TextDisplayBuilder().setContent("-# 데이터 제공: PUBG API"))
                             const response = await interaction.editReply({
-                                embeds: [embed],
-                                components: [moreStateActionRow]
+                                flags: MessageFlags.IsComponentsV2,
+                                components: [container]
                             });
 
                             const collector = response.createMessageComponentCollector({
@@ -279,9 +323,37 @@ module.exports = {
                             });
                             collector.on('collect', async i => {
                                 if (i.customId === 'moreStats') {
-
-                                    const moreStatsEmbed = await getPlayerData(nickname, playerId, mode, 'lifetime', platform, true);
-                                    await interaction.editReply({embeds: [moreStatsEmbed], components: []});
+                                    const moreContainer = await getPlayerData(nickname, playerId, mode, 'lifetime', platform, true);
+                                    const lessStateButton = new ButtonBuilder()
+                                        .setEmoji("📉")
+                                        .setLabel("접기 △")
+                                        .setStyle(ButtonStyle.Secondary)
+                                        .setCustomId("lessStats");
+                                    const lessStateActionRow = new ActionRowBuilder()
+                                        .addComponents(lessStateButton);
+                                    moreContainer
+                                        .addActionRowComponents(lessStateActionRow)
+                                        .addTextDisplayComponents(new TextDisplayBuilder().setContent("-# 데이터 제공: PUBG API"))
+                                    await interaction.editReply({
+                                        flags: MessageFlags.IsComponentsV2,
+                                        components: [moreContainer]
+                                    })
+                                } else if (i.customId === 'lessStats') {
+                                    const lessContainer = await getPlayerData(nickname, playerId, mode, 'lifetime', platform);
+                                    const moreStateButton = new ButtonBuilder()
+                                        .setEmoji("📊")
+                                        .setLabel("더보기 ▽")
+                                        .setStyle(ButtonStyle.Secondary)
+                                        .setCustomId("moreStats");
+                                    const moreStateActionRow = new ActionRowBuilder()
+                                        .addComponents(moreStateButton);
+                                    lessContainer
+                                        .addActionRowComponents(moreStateActionRow)
+                                        .addTextDisplayComponents(new TextDisplayBuilder().setContent("-# 데이터 제공: PUBG API"))
+                                    await interaction.editReply({
+                                        flags: MessageFlags.IsComponentsV2,
+                                        components: [lessContainer]
+                                    })
                                 }
                             })
                         }
