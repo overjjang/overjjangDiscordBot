@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, MessageFlags, TextDisplayBuilder, SeparatorBuilder, ContainerBuilder, UserSelectMenuBuilder, ActionRowBuilder, MediaGalleryBuilder, ComponentType } = require('discord.js');
+const { cm } = require('../../modules/color-model');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,7 +19,7 @@ module.exports = {
             .addTextDisplayComponents(selectText)
             .addSeparatorComponents(separator)
             .addActionRowComponents(actionRow)
-            .setAccentColor(0x0099ff)
+            .setAccentColor(0x00ffff)
 
         const response = await interaction.reply(
             {
@@ -28,7 +29,7 @@ module.exports = {
         )
         const collector = response.createMessageComponentCollector({
             componentType: ComponentType.userSelect,
-            time: 60000, //1분
+            time: 60000, // 1분
         });
         collector.on('collect', async (collectedInteraction) => {
             const user = collectedInteraction.values[0];
@@ -47,7 +48,7 @@ module.exports = {
                 .addTextDisplayComponents(new TextDisplayBuilder().setContent(`**${userName}**님의 프로필 사진입니다.`))
                 .addSeparatorComponents(new SeparatorBuilder())
                 .addMediaGalleryComponents(mediaGallery)
-                .setAccentColor(0x0099ff);
+                .setAccentColor(0x00ffff);
             interaction.editReply({
                 flags: MessageFlags.IsComponentsV2,
                 components: [container]
