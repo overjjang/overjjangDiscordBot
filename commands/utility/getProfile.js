@@ -25,6 +25,7 @@ module.exports = {
             {
                 flags: MessageFlags.IsComponentsV2,
                 components: [container],
+                ephemeral: true
             }
         )
         const collector = response.createMessageComponentCollector({
