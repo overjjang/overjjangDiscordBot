@@ -28,6 +28,7 @@ jobs:
             cd ./overjjangDiscordBot/
             git pull origin main
             npm install
+            node commandDeploy.js
             pm2 restart overjjangBot
 
       - name: Skip deployment in fork
