@@ -21,8 +21,8 @@ module.exports = {
         const question = message.content;
         try {
             const response = await ai.models.generateContent({
-                model: 'gemini-2.0-flash-Lite',
-                contents: `Translate the following text to English:\n${question}\n please send just the translation only with original text's language. if the text is already in English, just return the original text. if the text has marked down, please return the translation with markdown.`,
+                model: 'gemini-2.0-flash',
+                contents: `you are translater. Translate the following text to English:\n${question}\n please send just the translation only with original text's language. if the text is already in English, just return the original text. if the text has marked down, please return the translation with markdown.`,
                 config:{
                     responseMimeType:'application/json',
                     responseSchema:{
