@@ -21,6 +21,16 @@ module.exports = {
                 await interaction.reply({ content: '명령어 실행 중 오류가 발생했습니다.', ephemeral: true });
             }
         }
+        if (interaction.isMessageContextMenuCommand()){
+            const command = interaction.client.commands.get(interaction.commandName);
+            if (!command) return;
+            try {
+                await command.execute(interaction, interaction.targetMessage);
+            } catch (error) {
+                console.error(error);
+                await interaction.reply({ content: '명령어 실행 중 오류가 발생했습니다.', ephemeral: true });
+            }
+        }
 
         // 자동완성 요청인 경우 처리
         else if (interaction.isAutocomplete()) {
