@@ -12,7 +12,6 @@ module.exports = {
         .setType(ApplicationCommandType.Message),
 
     async execute(interaction, targetMessage) {
-        console.log(targetMessage);
         const message = targetMessage || interaction.targetMessage;
         await interaction.deferReply({})
         if (!message ) {
@@ -22,7 +21,7 @@ module.exports = {
         try {
             const response = await ai.models.generateContent({
                 model: 'gemini-2.0-flash',
-                contents: `you are translator. Translate the following text to Korean:\n${question}\n please send just the translation only with original text's language. if the text is already in Korean, just return the original text. if the text has marked down, please return the translation with markdown.`,
+                contents: `you are translator. please send just the translation only with original text's language. if the text is already in Korean, just return the original text. if the text has marked down, please return the translation with markdown. Translate the following text to Korean:\n${question}`,
                 config:{
                     responseMimeType:'application/json',
                     responseSchema:{
