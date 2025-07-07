@@ -22,8 +22,9 @@ module.exports = {
             console.log(`원문: ${question}`);
             const response = await ai.models.generateContent({
                 model: 'gemini-2.0-flash',
-                contents: `you are translator. please send just the translation only with original text's language. if the text is already in Japanese, just return the original text. if the text has marked down, please return the translation with markdown. Translate the following text to Japanese:\n${question}`,
+                contents: `${question}`,
                 config:{
+                    systemInstruction:"you are translator. please send just the translation only and original text's language. if the text is already in Japanese, just return the original text. if the text has marked down, please return the translation with markdown. Translate the following text to Japanese",
                     responseMimeType:'application/json',
                     responseSchema:{
                         type: Type.OBJECT,
