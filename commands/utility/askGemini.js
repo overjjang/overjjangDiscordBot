@@ -27,9 +27,11 @@ module.exports = {
         try {
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
-                contents: `You are an AI assistant. Use tool if you need. Please answer the following question in korean:\n${message}`,
+                contents: `${message}`,
                 config: {
+                    systemInstruction: "You are an AI assistant. timezone is KST. Use tool if you need. Please answer the following question in korean",
                     tools: [groundingTool],
+                    groundingMetadata:null,
                 }
             });
             console.log(response);
