@@ -138,7 +138,7 @@ module.exports = {
                             return uri ? `[${support.web.title}](https://${support.web.title})` : null;
                         }
                     )
-                    ground = ground + '... (출처가 너무 깁니다)';
+                    ground = ground + '... (출처 URL이 너무 길어 일부만 표시합니다.)';
                 }
                 container.addTextDisplayComponents(
                     new TextDisplayBuilder().setContent(ground)
@@ -148,7 +148,7 @@ module.exports = {
 
             container.addSeparatorComponents(new SeparatorBuilder())
                 .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent('-# 인공지능의 답변은 부정확할 수 있습니다. 맹신하지 마십시오.')
+                    new TextDisplayBuilder().setContent('-# ⓘ 인공지능의 답변은 부정확할 수 있습니다. 맹신하지 마십시오.')
                 )
 
             await interaction.editReply({
