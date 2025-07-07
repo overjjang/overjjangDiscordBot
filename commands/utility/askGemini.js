@@ -123,6 +123,7 @@ module.exports = {
                 .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${message} <a:gemini_loading:1391617229933514792>`))
                 .addSeparatorComponents(new SeparatorBuilder())
                 .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${answer}`))
+                .addSeparatorComponents(new SeparatorBuilder());
 
             let ground = ""
             if (response.candidates[0].groundingMetadata?.groundingSupports?.length > 0) {
@@ -138,7 +139,7 @@ module.exports = {
                             return uri ? `[${support.web.title}](https://${support.web.title})` : null;
                         }
                     )
-                    ground = ground + '... (출처 URL이 너무 길어 일부만 표시합니다.)';
+                    ground = ground + '\n-# ... (출처 URL이 너무 길어 일부만 표시합니다.)';
                 }
                 container.addTextDisplayComponents(
                     new TextDisplayBuilder().setContent(ground)
@@ -156,8 +157,19 @@ module.exports = {
                 components: [container],
             });
         } catch (error) {
+            const errorContainer = new ContainerBuilder()
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${message} <a:gemini_loading:1391617229933514792>`))
+                .addSeparatorComponents(new SeparatorBuilder())
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent('오류가 발생했습니다. 다시 시도해 주세요.'))
+                .addSeparatorComponents(new SeparatorBuilder())
+                .addTextDisplayComponents(
+                    new TextDisplayBuilder().setContent('-# ⓘ 인공지능의 답변은 부정확할 수 있습니다. 맹신하지 마십시오.')
+                );
+            await interaction.editReply({
+                components: [errorContainer],
+                flags: MessageFlags.IsComponentsV2
+            });
             console.error(error);
-            interaction.editReply({content: '질문 처리 중 오류가 발생했습니다.', ephemeral: true});
         }
     }
 }
