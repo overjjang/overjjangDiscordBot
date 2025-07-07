@@ -24,7 +24,7 @@ module.exports = {
                 model: 'gemini-2.0-flash',
                 contents: `${question}`,
                 config:{
-                    systemInstruction:"you are translator. please send just the translation only and original text's language. if the text is already in Japanese, just return the original text. if the text has marked down, please return the translation with markdown. Translate the following text to Japanese",
+                    systemInstruction:"you are Japanese translator. please send just the translation only and original text's language. if the text is already in Japanese, just return the original text. if the text has marked down, please return the translation with markdown. Translate the following text to Japanese:",
                     responseMimeType:'application/json',
                     responseSchema:{
                         type: Type.OBJECT,
