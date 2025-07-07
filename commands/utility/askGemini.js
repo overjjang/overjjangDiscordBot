@@ -124,16 +124,28 @@ module.exports = {
                 .addSeparatorComponents(new SeparatorBuilder())
                 .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${answer}`))
 
-            if (response.candidates?.[0]?.groundingMetadata?.groundingSupports?.length > 0) {
-                container.addSeparatorComponents(new SeparatorBuilder())
-            .addTextDisplayComponents(
-                    new TextDisplayBuilder().setContent('출처: ' + response.candidates[0].groundingMetadata.groundingChunks.map(support => {
+            let ground = ""
+            if (response.candidates[0].groundingMetadata?.groundingSupports?.length > 0) {
+                ground = '출처: ' + response.candidates[0].groundingMetadata.groundingChunks.map(support => {
                         const uri = support.web?.uri;
                         return uri ? `[${support.web.title}](${uri})` : null;
                     }
-                    ))
+                )
+                if (ground.length>2000){
+                    console.log("출처가 너무 깁니다. 일부만 표시합니다.");
+                    ground = '출처: ' + response.candidates[0].groundingMetadata.groundingChunks.map(support => {
+                            const uri = support.web?.uri;
+                            return uri ? `[${support.web.title}](https://${support.web.title})` : null;
+                        }
+                    )
+                    ground = ground + '... (출처가 너무 깁니다)';
+                }
+                container.addTextDisplayComponents(
+                    new TextDisplayBuilder().setContent(ground)
                 )
             }
+
+
             container.addSeparatorComponents(new SeparatorBuilder())
                 .addTextDisplayComponents(
                     new TextDisplayBuilder().setContent('-# 인공지능의 답변은 부정확할 수 있습니다. 맹신하지 마십시오.')
