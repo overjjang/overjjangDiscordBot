@@ -8,7 +8,7 @@ dotenv.config();
 const deployCommands = () => {
     const token = process.env.TOKEN;
     const clientId = process.env.CLIENT_ID;
-    const guildId = process.env.GUILD_ID;
+    const guildIds = process.env.GUILD_ID.split(" ").map(id => id.trim());
 
     const commands = [];
 // Grab all the command folders from the commands directory you created earlier
@@ -35,22 +35,23 @@ const deployCommands = () => {
     const rest = new REST().setToken(token);
 
 
-    // reset commands
-    rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: [] })
-        .then(() => console.log('Successfully deleted all guild commands.'))
-        .catch(console.error);
 
 // and deploy your commands!
     (async () => {
         try {
             console.log(`Started refreshing ${commands.length} application (/) commands.`);
+            for (const guildId of guildIds) {
+                // reset commands
+                await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: [] })
+                    .then(() => console.log(`Successfully deleted all guild commands.(${guildId.slice(0,4)}...)`))
+                    .catch(console.error);
 
-            // The put method is used to fully refresh all commands in the guild with the current set
-            const data = await rest.put(
-                Routes.applicationGuildCommands(clientId, guildId),
-                {body: commands},
-            );
-            console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+                await rest.put(
+                    Routes.applicationGuildCommands(clientId, guildId),
+                    {body: commands},
+                );
+                console.log(`Successfully reloaded ${commands.length} application (/) commands in guild (${guildId.slice(0,4)}...).`);
+            }
         } catch (error) {
             // And of course, make sure you catch and log any errors!
             console.error(error);
