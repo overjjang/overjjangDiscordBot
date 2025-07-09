@@ -42,13 +42,12 @@ const deployCommands = () => {
 
             // The put method is used to fully refresh all commands in the guild with the current set
             for (const guildId of guildIds) {
-                await rest.put(
+                const data = await rest.put(
                     Routes.applicationGuildCommands(clientId, guildId),
                     {body: commands},
                 );
-                console.log(`Successfully reloaded ${commands.length} application (/) commands in guild (${guildId.slice(0,4)}...).`);
+                console.log(`Successfully reloaded ${data.length} application (/) commands.(${guildId.slice(0,6)}...)`);
             }
-            console.log(`Successfully reloaded ${data.length} application (/) commands.`);
         } catch (error) {
             // And of course, make sure you catch and log any errors!
             console.error(error);

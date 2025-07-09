@@ -42,15 +42,16 @@ const deployCommands = () => {
             console.log(`Started refreshing ${commands.length} application (/) commands.`);
             for (const guildId of guildIds) {
                 // reset commands
-                await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: [] })
+                const del_data = await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: [] })
                     .then(() => console.log(`Successfully deleted all guild commands.(${guildId.slice(0,4)}...)`))
                     .catch(console.error);
 
-                await rest.put(
+
+                const data = await rest.put(
                     Routes.applicationGuildCommands(clientId, guildId),
                     {body: commands},
                 );
-                console.log(`Successfully reloaded ${commands.length} application (/) commands in guild (${guildId.slice(0,4)}...).`);
+                console.log(`Successfully reloaded ${data.length} application (/) commands in guild (${guildId.slice(0,4)}...).`);
             }
         } catch (error) {
             // And of course, make sure you catch and log any errors!
