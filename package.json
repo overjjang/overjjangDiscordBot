@@ -13,6 +13,7 @@
     "discord.js": "^14.19.3",
     "dotenv": "^16.5.0",
     "libsodium-wrappers": "^0.7.15",
+    "mongoose": "^8.16.4",
     "node-fetch": "^3.3.2"
   }
 }

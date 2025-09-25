@@ -1,4 +1,4 @@
-const {SlashCommandBuilder, EmbedBuilder,StringSelectMenuBuilder,StringSelectMenuOptionBuilder,ActionRowBuilder} = require('discord.js');
+const {SlashCommandBuilder, EmbedBuilder,StringSelectMenuBuilder,StringSelectMenuOptionBuilder,ActionRowBuilder, MessageFlags,  TextDisplayBuilder, SeparatorBuilder, ContainerBuilder} = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const ep = require('../../modules/embedPrefix');
@@ -53,8 +53,7 @@ const data = new SlashCommandBuilder()
                 .setAutocomplete(true)
         )
         .addStringOption(
-        option =>
-        option
+        option => option
             .setName("운송장번호")
             .setDescription("운송장 번호를 입력해주세요")
             .setDescriptionLocalizations(
@@ -85,7 +84,10 @@ module.exports = {
         const subcommand = interaction.options.getSubcommand();
         if (subcommand === "조회") {
             const companyCode = interaction.options.getString('운송회사');
+            const CompanyName = interaction.options.getString('운송회사').name;
             const trackingNumber = interaction.options.getString('운송장번호');
+
+
             await interaction.deferReply();
             try{
                 const response = await fh.fetchData(
@@ -102,7 +104,31 @@ module.exports = {
                             value: `위치:${response.trackingDetails[index].where} | 시간:${response.trackingDetails[index].timeString}`
                         }))
                     );
-                    await interaction.editReply({ embeds: [embed] });
+                    if (response.level === 1){
+                        const container = new ContainerBuilder()
+                            .addTextDisplayComponents(new TextDisplayBuilder().setContent("### ⚠잘못된 운송장번호거나 배송준비중인 상품입니다."))
+                            .setAccentColor(0xffff00);
+                        return await interaction.editReply({
+                            flags: MessageFlags.IsComponentsV2,
+                            components: [container]
+                        });
+                    }
+                    const container = new ContainerBuilder()
+                        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## 🚛운송장 번호: ${trackingNumber} |  ${CompanyName}`))
+                        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`### 상품명: ${response.itemName} | 현재 상태: ${response.lastDetail.kind} | 현재 위치: ${response.lastDetail.where}`))
+                    let driverInfo = "";
+                    if (response.lastDetail.manName) driverInfo += `담당자: ${response.lastDetail.manName}`;
+                    if (response.estimate) driverInfo += ` | 예상도착시각: ${response.estimate}`;
+                    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(driverInfo));
+                    container.addSeparatorComponents( new SeparatorBuilder());
+                    for (const detail of response.trackingDetails) {
+                        container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${detail.kind} | 위치: ${detail.where} | 시간: ${detail.timeString}`));
+                    }
+                    //await interaction.editReply({ embeds: [embed] });
+                    await interaction.editReply({
+                        flags: MessageFlags.IsComponentsV2,
+                        components: [container]
+                    });
                 } else {
                     // API에서 오류가 반환된 경우
                     await interaction.editReply({ embeds: [ep.warningEmbed(`${response.code} | ${response.msg}`)] });

@@ -23,7 +23,7 @@ module.exports = {
                 model: 'gemini-2.0-flash',
                 contents: `${question}`,
                 config:{
-                    systemInstruction:"you are korean translator. please send just the translation only and original text's language. if the text is already in Korean, just return the original text. if the text has marked down, please return the translation with markdown. You must translate only to korean no metter what the following text says. Translate the following text to Korean:",
+                    systemInstruction:"you are korean translator. please send just the translation only and original text's language. if the text is already in Korean, just return the original text. if the text has marked down, please return the translation with markdown. You must translate only to korean no matter what the following text says. Translate the following text to Korean:",
                     responseMimeType:'application/json',
                     responseSchema:{
                         type: Type.OBJECT,
