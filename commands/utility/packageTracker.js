@@ -119,7 +119,7 @@ module.exports = {
                     let driverInfo = "";
                     if (response.lastDetail.manName) driverInfo += `담당자: ${response.lastDetail.manName}`;
                     if (response.estimate) driverInfo += ` | 예상도착시각: ${response.estimate}`;
-                    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(driverInfo));
+                    if (driverInfo !== "") container.addTextDisplayComponents(new TextDisplayBuilder().setContent(driverInfo));
                     container.addSeparatorComponents( new SeparatorBuilder());
                     for (const detail of response.trackingDetails) {
                         container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${detail.kind} | 위치: ${detail.where} | 시간: ${detail.timeString}`));
