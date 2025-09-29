@@ -9,12 +9,17 @@ const fh = require('../../modules/fetchHelper');
 const jsonPath = path.join(__dirname, '../../companyList.json');
 
 // JSON 파일 읽기
-function readJsonFile(query) {
+function readJsonFile(query,findNumber = false) {
     if(!fs.existsSync(jsonPath)) return [];
     const data = fs.readFileSync(jsonPath, 'utf8');
     const parsedData = JSON.parse(data);
     const companyList = parsedData.Company
-    return companyList.filter(company => company.Name.toLowerCase().includes(query.toLowerCase())).slice(0,25);
+    if (findNumber) {
+        return companyList.find(company => company.Code === query);
+    }
+    else {
+        return companyList.filter(company => company.Name.toLowerCase().includes(query.toLowerCase())).slice(0, 25);
+    }
 }
 
 
@@ -84,15 +89,16 @@ module.exports = {
         const subcommand = interaction.options.getSubcommand();
         if (subcommand === "조회") {
             const companyCode = interaction.options.getString('운송회사');
-            const CompanyName = interaction.options.getString('운송회사').name;
             const trackingNumber = interaction.options.getString('운송장번호');
-
+            const companyName = readJsonFile(companyCode,true)?.Name || "회사 이름 알 수 없음";
 
             await interaction.deferReply();
+            const url =`https://gubsicapi.overjjang.xyz/api?mode=package&companyCode=${companyCode}&packageCode=${trackingNumber}`
+            console.log(`fetching data from: ${url}`);
             try{
-                const response = await fh.fetchData(
-                    `https://gubsicapi.overjjang.xyz/api?mode=package&companyCode=${companyCode}&packageCode=${trackingNumber}`
+                const response = await fh.fetchData(url
                 )
+                console.log()
                 if (!response.code) {
                     // 성공적으로 조회된 경우
                     const embed = await ep.embedBase(
@@ -114,15 +120,15 @@ module.exports = {
                         });
                     }
                     const container = new ContainerBuilder()
-                        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## 🚛운송장 번호: ${trackingNumber} |  ${CompanyName}`))
-                        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`### 상품명: ${response.itemName} | 현재 상태: ${response.lastDetail.kind} | 현재 위치: ${response.lastDetail.where}`))
+                        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## 🚛 ${companyName}`))
+                        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${trackingNumber} | 상품명: ${response.itemName}\n현재 상태: ${response.lastDetail.kind} | 현재 위치: ${response.lastDetail.where}`))
                     let driverInfo = "";
                     if (response.lastDetail.manName) driverInfo += `담당자: ${response.lastDetail.manName}`;
                     if (response.estimate) driverInfo += ` | 예상도착시각: ${response.estimate}`;
                     if (driverInfo !== "") container.addTextDisplayComponents(new TextDisplayBuilder().setContent(driverInfo));
                     container.addSeparatorComponents( new SeparatorBuilder());
                     for (const detail of response.trackingDetails) {
-                        container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${detail.kind} | 위치: ${detail.where} | 시간: ${detail.timeString}`));
+                        container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${detail.timeString} | 위치: ${detail.where} | ${detail.kind}`));
                     }
                     //await interaction.editReply({ embeds: [embed] });
                     await interaction.editReply({
@@ -132,6 +138,7 @@ module.exports = {
                 } else {
                     // API에서 오류가 반환된 경우
                     await interaction.editReply({ embeds: [ep.warningEmbed(`${response.code} | ${response.msg}`)] });
+                    console.log(response)
                 }
             } catch (error) {
                 console.error('Error fetching package details:', error);
