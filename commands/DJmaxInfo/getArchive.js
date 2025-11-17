@@ -58,10 +58,10 @@ module.exports = {
                 top10.forEach((song, index) => {
                     topString += `${song.pattern}${String(song.level).padStart(2,"0")} | ${song.score}% - ${song.name}`;
                     if (song.score === "100.00"){
-                        topString += ` - <perfect:1439794561760100452>\n`;
+                        topString += ` - <:perfect:1439794561760100452>\n`;
                     }
                     else if (song.maxCombo === 1){
-                        topString += ` - <maxcombo:1439794612016517180>\n`;
+                        topString += ` - <:maxcombo:1439794612016517180>\n`;
                     }
                     else {
                         topString += `\n`;
