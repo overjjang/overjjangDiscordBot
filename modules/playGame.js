@@ -1,7 +1,7 @@
 const db = require('./connetDB.js');
 const { Client } = require("pg");
 const dotenv = require('dotenv');
-dotenv.config();
+dotenv.config({path:'../.env'});
 const {ApplicationCommandType ,MessageFlags, SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType, AttachmentBuilder,ButtonBuilder,ButtonStyle, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ContextMenuCommandBuilder, UserSelectMenuBuilder, ChannelType,
     Embed
 } = require('discord.js');
