@@ -7,7 +7,7 @@ const {ApplicationCommandType ,MessageFlags, SlashCommandBuilder, EmbedBuilder, 
 } = require('discord.js');
 
 const client = new Client({
-    user: "postgres",
+    user: process.env.PSQL_USER,
     host: "127.0.0.1",
     database: "kkumal",
     password: process.env.PSQL_PASSWORD,
