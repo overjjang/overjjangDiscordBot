@@ -41,7 +41,7 @@ async function findByRoomId(channelId) {
     }
 }
 
-async function deleteByRoomId(channelId) {
+async function deleteByRoomId(channelId,doArchive=false) {
     try {
         const result = await gameRoom.deleteOne({roomId: channelId});
         console.log('게임 방 삭제 성공:', result);

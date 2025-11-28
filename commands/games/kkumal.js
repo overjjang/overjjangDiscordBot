@@ -1,5 +1,6 @@
-const {ApplicationCommandType ,MessageFlags, SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType, AttachmentBuilder,ButtonBuilder,ButtonStyle, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ContextMenuCommandBuilder, UserSelectMenuBuilder, ChannelType} = require('discord.js');
-const db = require("../../modules/connetDB");
+const {ApplicationCommandType ,MessageFlags, SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType, AttachmentBuilder,ButtonBuilder,ButtonStyle, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ContextMenuCommandBuilder, UserSelectMenuBuilder, ChannelType,
+    Embed
+} = require('discord.js');
 
 const data = new SlashCommandBuilder()
         .setName("끝말잇기")
@@ -25,6 +26,11 @@ const data = new SlashCommandBuilder()
         subcommand
             .setName("시작")
             .setDescription("끝말잇기 게임을 시작합니다.")
+    )
+    .addSubcommand(subcommand =>
+    subcommand
+    .setName("중지")
+    .setDescription("끝말잇기 게임을 중지합니다.")
     )
     .addSubcommand(subcommand =>
     subcommand
@@ -133,11 +139,16 @@ module.exports = {
                 await interaction.reply({content: "최소 2명 이상의 플레이어가 필요합니다.", ephemeral: true});
                 return;
             }
+            await interaction.deferReply();
+            roomData.gameData = {};
+            roomData.gameData.playerSeq = roomData.players.sort(() => Math.random() - 0.5);
+            console.log (roomData.gameData.playerSeq);
+            roomData.gameData.currentTurnIndex = 0;
+            const embed = new EmbedBuilder().setTitle("끝말잇기 게임 시작!").setDescription(`게임이 시작되었습니다! 첫 번째 단어를 입력해주세요\n순서: ${roomData.gameData.playerSeq.map(player => `<@${player.userId}>`).join("=>")}`)
+            await interaction.editReply({embeds:[embed]});
+            await interaction.channel.send(`<@${roomData.gameData.playerSeq[0].userId}>님의 차례입니다! 단어를 입력해주세요.`);
             roomData.isStarted = true;
-            // 게임 초기화 로직 추가 가능
             await roomData.save();
-            await interaction.reply({content: "끝말잇기 게임이 시작되었습니다!", ephemeral: false});
-            await interaction.channel.send(`게임이 시작되었습니다! 첫 번째 단어를 입력해주세요.`);
         }
 
         if (interaction.options.getSubcommand() === "방삭제") {
@@ -154,11 +165,35 @@ module.exports = {
                 await interaction.reply({content: "방장만 방을 삭제할 수 있습니다.", ephemeral: true});
                 return;
             }
-            await db.deleteByRoomId(interaction.channel.id);
+            await db.deleteByRoomId(interaction.channel.id,true);
             await interaction.reply({content: "끝말잇기 방의 데이터가 삭제되었습니다. 잠시후 체널이 삭제됩니다"});
             setTimeout(async () => {
                 await interaction.channel.delete();
             }, 10000);
+        }
+        if (interaction.options.getSubcommand() === "중지") {
+            const db = require('../../modules/connetDB.js');
+            const roomData = await db.findByRoomId(interaction.channel.id);
+            if (!roomData) {
+                await interaction.reply({
+                    content: "이 채널은 끝말잇기 방이 아닙니다. 버짱이-게임 카테고리 안에 있는 끝말잇기 체널에서 명령어를 사용해주세요",
+                    ephemeral: true
+                });
+                return;
+            }
+            if (roomData.bangJang.userId !== interaction.user.id) {
+                await interaction.reply({content: "방장만 게임을 중지할 수 있습니다.", ephemeral: true});
+                return;
+            }
+            if (!roomData.isStarted) {
+                await interaction.reply({content: "게임이 시작되지 않았습니다.", ephemeral: true});
+                return;
+            }
+            roomData.isStarted = false;
+            await roomData.save();
+            await interaction.reply({
+                content: "끝말잇기 게임이 중지되었습니다. 다시 시작하려면 /끝말잇기 시작 명령어를 사용하세요.",
+            });
         }
     }
 }

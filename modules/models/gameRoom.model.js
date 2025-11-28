@@ -6,6 +6,7 @@ const Schema = mongoose.Schema;
 
 const gameRoomSchema = new Schema({
     isStarted: { type: Boolean, default: false },
+    archived: { type: Boolean, default: false },
     roomId: { type: String, required: true, unique: true },
     date : { type: Date, required: true },
     gameType: { type: String, required: true },
