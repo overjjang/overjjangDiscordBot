@@ -86,6 +86,10 @@ module.exports = {
                 await interaction.reply({content: "게임 방이 가득 찼습니다.", ephemeral: true});
                 return;
             }
+            if (roomData.isStarted) {
+                await interaction.reply({content:"이미 시작된 방에는 입장하실 수 없습니다."});
+                return;
+            }
             roomData.players.push({userId: interaction.user.id, userName: interaction.user.username});
             await roomData.save();
             await interaction.reply({content: "게임에 성공적으로 입장했습니다!", ephemeral: true});
