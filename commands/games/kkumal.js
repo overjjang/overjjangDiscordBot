@@ -10,6 +10,12 @@ const data = new SlashCommandBuilder()
             subcommand
                 .setName("방생성")
                 .setDescription("끝말잇기 방을 생성합니다.")
+                .addNumberOption(option =>
+                    option
+                        .setName("라운드")
+                        .setDescription("진행할 라운드 수를 결정합니다.(기본5)")
+                        .setRequired(false)
+                )
         )
     .addSubcommand(subcommand =>
     subcommand
@@ -45,10 +51,10 @@ module.exports = {
         // 방 생성
         if (interaction.options.getSubcommand() === "방생성") {
             const db = require('../../modules/connetDB.js');
-            // if (interaction.guild.channels.cache.find(channel => channel.name === `끝말잇기-${interaction.user.username}` && channel.type === ChannelType.GuildText)) {
-            //     await interaction.reply({content: "이미 끝말잇기 방을 생성하셨습니다.", ephemeral: true});
-            //     return;
-            // }
+            if (interaction.guild.channels.cache.find(channel => channel.name === `끝말잇기-${interaction.user.username}` && channel.type === ChannelType.GuildText)) {
+                await interaction.reply({content: "이미 끝말잇기 방을 생성하셨습니다.", ephemeral: true});
+                return;
+            }
             // 게임이라는 카테고리가 없으면 생성
             if (interaction.guild.channels.cache.find(channel => channel.name === "버짱이-게임" && channel.type === ChannelType.GuildCategory) == null) {
                 await interaction.guild.channels.create({
@@ -145,11 +151,21 @@ module.exports = {
             }
             await interaction.deferReply();
             roomData.gameData = {};
+            const firstWordLength = interaction.options.getNumber("단어길이") || 5;
+            const firstWordResult = await db.getRandomWord(firstWordLength)
+            console.log(firstWordResult);
+            roomData.gameData.lastWord = firstWordResult.charAt(0);
+            roomData.firstWord = firstWordResult;
             roomData.gameData.playerSeq = roomData.players.sort(() => Math.random() - 0.5);
             console.log (roomData.gameData.playerSeq);
             roomData.gameData.currentTurnIndex = 0;
-            const embed = new EmbedBuilder().setTitle("끝말잇기 게임 시작!").setDescription(`게임이 시작되었습니다! 첫 번째 단어를 입력해주세요\n순서: ${roomData.gameData.playerSeq.map(player => `<@${player.userId}>`).join("=>")}`)
-            await interaction.editReply({embeds:[embed]});
+            const container = new ContainerBuilder()
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 게임 시작!`))
+                .addSeparatorComponents(new SeparatorBuilder())
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`순서: ${roomData.gameData.playerSeq.map(player => `<@${player.userId}>`).join(' -> ')}`))
+                .addSeparatorComponents(new SeparatorBuilder())
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`***${firstWordResult.charAt(0)}***${firstWordResult.slice(1)}`));
+            await interaction.editReply({components:[container], flags: MessageFlags.IsComponentsV2});
             await interaction.channel.send(`<@${roomData.gameData.playerSeq[0].userId}>님의 차례입니다! 단어를 입력해주세요.`);
             roomData.isStarted = true;
             await roomData.save();

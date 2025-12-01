@@ -1,49 +1,11 @@
 const db = require('./connetDB.js');
-const { Client } = require("pg");
 const dotenv = require('dotenv');
 dotenv.config({path:'../.env'});
 const {ApplicationCommandType ,MessageFlags, SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType, AttachmentBuilder,ButtonBuilder,ButtonStyle, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ContextMenuCommandBuilder, UserSelectMenuBuilder, ChannelType,
     Embed
 } = require('discord.js');
 
-const client = new Client({
-    user: process.env.PSQL_USER,
-    host: "127.0.0.1",
-    database: "kkumal",
-    password: process.env.PSQL_PASSWORD,
-    port: 5432,
-});
-client.connect();
-
-async function exsists(word) {
-    try {
-        const query = `
-        SELECT _id
-        FROM public.kkutu_ko
-        WHERE _id = $1
-        LIMIT 1;
-        `;
-        const result = await client.query(query, [word]);
-        console.log(result);
-        if (result.rowCount > 0) return true;
-
-        const inQuery = `
-        SELECT _id
-        FROM public.kkutu_injeong
-        WHERE _id = $1
-        LIMIT 1;
-        `;
-        const inResult = await client.query(inQuery, [word]);
-        console.log(inResult);
-        return inResult.rowCount > 0;
-
-
-
-    } catch (err) {
-        console.error('단어 조회 중 오류 발생:', err);
-        return false;
-    }
-}
+// type 0,1:명사 5:동사
 
 function getDueumVariants(lastChar) {
     const code = lastChar.charCodeAt(0);
@@ -95,6 +57,11 @@ async function playGame(message) {
                 gameData.usedWords = gameData.usedWords || [];
                 const lastWord = gameData.lastWord || null;
                 const newWord = message.content.trim();
+
+                // 예외처리들
+                if (!roomData.players.some(player => player.userId === message.author.id)) {
+                    return;
+                }
                 if (message.author.id !== gameData.playerSeq[gameData.currentTurnIndex].userId) {
                     return await message.reply({
                         content: `지금은 ${gameData.playerSeq[gameData.currentTurnIndex].userName}님의 차례입니다.`,
@@ -124,17 +91,20 @@ async function playGame(message) {
                     await message.reply({content: "이미 사용된 단어입니다.", ephemeral: true});
                     return;
                 }
-                const wordExists = await exsists(newWord);
+                const wordExists = await db.exists(newWord);
                 if (!wordExists) {
                     await message.reply({content: "등록되지 않은 단어입니다.", ephemeral: true});
                     return;
                 }
+
+                // 게임 진행
                 gameData.usedWords.push(newWord);
 
                 gameData.lastWord = newWord;
                 gameData.currentTurnIndex = (gameData.currentTurnIndex + 1) % roomData.players.length;
                 const newAllowedFirstChars = getDueumVariants(newWord.charAt(newWord.length - 1));
-                await message.channel.send({components: [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ${lastWord} ➔ ${newWord}`)).addSeparatorComponents(new SeparatorBuilder()).addTextDisplayComponents(new TextDisplayBuilder().setContent(`다음 차례: <@${gameData.playerSeq[gameData.currentTurnIndex].userId}>\n${newAllowedFirstChars.join(', ')}`))],flags: MessageFlags.IsComponentsV2});
+                const container = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ${lastWord} ➔ ${newWord}`)).addSeparatorComponents(new SeparatorBuilder()).addTextDisplayComponents(new TextDisplayBuilder().setContent(`다음 차례: <@${gameData.playerSeq[gameData.currentTurnIndex].userId}>`)).addSeparatorComponents(new SeparatorBuilder()).addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ➔ ${newAllowedFirstChars.join(', ')}`));
+                await message.channel.send({components: [container],flags: MessageFlags.IsComponentsV2});
 
                 console.log(roomData, gameData);
                 roomData.gameData = gameData;

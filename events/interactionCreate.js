@@ -5,7 +5,7 @@ const path = require('path');
 module.exports = {
     name: Events.InteractionCreate,
     async execute(interaction) {
-        // 명령어 타입인 경우 처리
+        // 슬레시 커멘드
         if (interaction.isChatInputCommand()) {
             const command = interaction.client.commands.get(interaction.commandName);
 
@@ -32,7 +32,7 @@ module.exports = {
             }
         }
 
-        // 자동완성 요청인 경우 처리
+        // 자동완성
         else if (interaction.isAutocomplete()) {
             const command = interaction.client.commands.get(interaction.commandName);
 

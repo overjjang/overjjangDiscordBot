@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { Client } = require("pg");
 const dotenv = require('dotenv');
 const gameRoom = require('./models/gameRoom.model.js');
 
@@ -8,6 +9,19 @@ const DB_URL = process.env.DB_URL
 mongoose.connect(DB_URL, {})
     .then(() => console.log('MongoDB 연결 성공'))
     .catch((error) => console.error('MongoDB 연결 실패:', error));
+
+const client = new Client({
+    user: process.env.PSQL_USER,
+    host: "127.0.0.1",
+    database: "kkumal",
+    password: process.env.PSQL_PASSWORD,
+    port: 5432,
+});
+client.connect().then(r =>
+    console.log("PostgreSQL connected")
+).catch(err =>
+    console.error("PostgreSQL connection error:", err)
+);
 
 
 // ID 디코 체널 아이디, 게임 룸 번호로 사용
@@ -43,6 +57,11 @@ async function findByRoomId(channelId) {
 
 async function deleteByRoomId(channelId,doArchive=false) {
     try {
+        if (doArchive) {
+            const result = await gameRoom.updateOne({roomId: channelId}, {$set: {archived: true}});
+            console.log('게임 방 아카이브 성공:', result);
+            return result;
+        }
         const result = await gameRoom.deleteOne({roomId: channelId});
         console.log('게임 방 삭제 성공:', result);
         return result;
@@ -51,10 +70,56 @@ async function deleteByRoomId(channelId,doArchive=false) {
     }
 }
 
+async function exists(word) {
+    try {
+        const query = `
+        SELECT _id
+        FROM public.kkutu_ko
+        WHERE _id = $1
+        LIMIT 1;
+        `;
+        const result = await client.query(query, [word]);
+        console.log(result);
+        if (result.rowCount > 0) return true;
 
+        const inQuery = `
+        SELECT _id
+        FROM public.kkutu_injeong
+        WHERE _id = $1
+        LIMIT 1;
+        `;
+        const inResult = await client.query(inQuery, [word]);
+        console.log(inResult);
+        return inResult.rowCount > 0;
+    } catch (err) {
+        console.error('단어 조회 중 오류 발생:', err);
+        return false;
+    }
+}
+
+async function getRandomWord(length) {
+    try{
+        const query = `
+                SELECT _id
+                FROM public.kkutu_ko
+                WHERE LENGTH(_id) = $1
+                ORDER BY RANDOM()
+                LIMIT 1;
+                `
+        const result = await client.query(query, [length]);
+        if (result.rowCount > 0) {
+            return result.rows[0]._id;
+        }
+        return null;
+    } catch(err){
+        console.error('단어 조회 중 오류 발생:', err);
+    }
+}
 
 module.exports = {
     createGameRoom,
     findByRoomId,
     deleteByRoomId,
+    exists,
+    getRandomWord,
 };
