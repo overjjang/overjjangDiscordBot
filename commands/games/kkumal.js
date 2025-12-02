@@ -1,6 +1,40 @@
-const {ApplicationCommandType ,MessageFlags, SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType, AttachmentBuilder,ButtonBuilder,ButtonStyle, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ContextMenuCommandBuilder, UserSelectMenuBuilder, ChannelType,
+const {ApplicationCommandType,MessageFlags, SlashCommandBuilder, EmbedBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, ActionRowBuilder, ComponentType, AttachmentBuilder,ButtonBuilder,ButtonStyle, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ContextMenuCommandBuilder, UserSelectMenuBuilder, ChannelType,
     Embed
 } = require('discord.js');
+
+async function makeSettingContainer(roomData) {
+    const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 방 설정`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`라운드 수`))
+        .addActionRowComponents(
+            new ActionRowBuilder()
+                .addComponents(
+                    new StringSelectMenuBuilder()
+                        .setCustomId('setRounds')
+                        .setOptions(
+                            Array.from({ length: 10 }, (_, i) => i + 2).map(num =>
+                                new StringSelectMenuOptionBuilder()
+                                    .setLabel(`${num}`)
+                                    .setValue(num.toString())
+                            )
+                        )
+                        .setPlaceholder(`${roomData.gameSettings?.rounds}`)
+                )
+        )
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`메너 모드`))
+        .addActionRowComponents(
+            new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('setMannerToggle')
+                        .setLabel(`${roomData.gameSettings?.mannerMode ? '켜짐' : '꺼짐'}`)
+                        .setStyle(roomData.gameSettings?.mannerMode ? ButtonStyle.Primary : ButtonStyle.Secondary)
+                )
+        );
+    return container;
+}
 
 const data = new SlashCommandBuilder()
         .setName("끝말잇기")
@@ -10,12 +44,6 @@ const data = new SlashCommandBuilder()
             subcommand
                 .setName("방생성")
                 .setDescription("끝말잇기 방을 생성합니다.")
-                .addNumberOption(option =>
-                    option
-                        .setName("라운드")
-                        .setDescription("진행할 라운드 수를 결정합니다.(기본5)")
-                        .setRequired(false)
-                )
         )
     .addSubcommand(subcommand =>
     subcommand
@@ -43,7 +71,14 @@ const data = new SlashCommandBuilder()
         .setName("방삭제")
         .setDescription("끝말잇기 방을 삭제합니다.")
     )
+    .addSubcommand(subcommand =>
+    subcommand
+        .setName("설정")
+        .setDescription("끝말잇기 방의 설정을 변경합니다.")
+    )
 
+//gameData : 순서, 현재턴, 마지막단어, 사용된단어목록
+//gameSettings : 라운드수, 메너, 시간제한 등 설정
 
 module.exports = {
     data: data,
@@ -130,7 +165,7 @@ module.exports = {
             await interaction.reply({content: "게임에서 성공적으로 퇴장했습니다!", ephemeral: true});
             await interaction.channel.send(`${interaction.user}님이 게임에서 퇴장하셨습니다!`);
         }
-
+        // 시작
         if (interaction.options.getSubcommand() === "시작") {
             const db = require('../../modules/connetDB.js');
             const roomData = await db.findByRoomId(interaction.channel.id);
@@ -150,15 +185,17 @@ module.exports = {
                 return;
             }
             await interaction.deferReply();
+            const firstWordLength = roomData.gameSettings.rounds || 5;
+            roomData.gameSettings.rounds = firstWordLength;
+            roomData.gameSettings.mannerMode = roomData.gameSettings.mannerMode || true;
+            // 초기화
             roomData.gameData = {};
-            const firstWordLength = interaction.options.getNumber("단어길이") || 5;
             const firstWordResult = await db.getRandomWord(firstWordLength)
-            console.log(firstWordResult);
             roomData.gameData.lastWord = firstWordResult.charAt(0);
-            roomData.firstWord = firstWordResult;
+            roomData.gameData.firstWord = firstWordResult;
             roomData.gameData.playerSeq = roomData.players.sort(() => Math.random() - 0.5);
-            console.log (roomData.gameData.playerSeq);
             roomData.gameData.currentTurnIndex = 0;
+
             const container = new ContainerBuilder()
                 .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 게임 시작!`))
                 .addSeparatorComponents(new SeparatorBuilder())
@@ -170,7 +207,7 @@ module.exports = {
             roomData.isStarted = true;
             await roomData.save();
         }
-
+        // 삭제
         if (interaction.options.getSubcommand() === "방삭제") {
             const db = require('../../modules/connetDB.js');
             const roomData = await db.findByRoomId(interaction.channel.id);
@@ -185,12 +222,13 @@ module.exports = {
                 await interaction.reply({content: "방장만 방을 삭제할 수 있습니다.", ephemeral: true});
                 return;
             }
-            await db.deleteByRoomId(interaction.channel.id,true);
+            await db.deleteByRoomId(interaction.channel.id);
             await interaction.reply({content: "끝말잇기 방의 데이터가 삭제되었습니다. 잠시후 체널이 삭제됩니다"});
             setTimeout(async () => {
                 await interaction.channel.delete();
             }, 10000);
         }
+        // 중지
         if (interaction.options.getSubcommand() === "중지") {
             const db = require('../../modules/connetDB.js');
             const roomData = await db.findByRoomId(interaction.channel.id);
@@ -213,6 +251,54 @@ module.exports = {
             await roomData.save();
             await interaction.reply({
                 content: "끝말잇기 게임이 중지되었습니다. 다시 시작하려면 /끝말잇기 시작 명령어를 사용하세요.",
+            });
+        }
+        if (interaction.options.getSubcommand() === "설정") {
+            const db = require('../../modules/connetDB.js');
+            const roomData = await db.findByRoomId(interaction.channel.id);
+            if (!roomData) {
+                await interaction.reply({
+                    content: "이 채널은 끝말잇기 방이 아닙니다. 버짱이-게임 카테고리 안에 있는 끝말잇기 체널에서 명령어를 사용해주세요",
+                    ephemeral: true
+                });
+                return;
+            }
+            if (roomData.bangJang.userId !== interaction.user.id) {
+                await interaction.reply({content: "방장만 설정을 변경할 수 있습니다.", ephemeral: true});
+                return;
+            }
+            await interaction.deferReply();
+
+            const container = await makeSettingContainer(roomData);
+            const response = await interaction.editReply({components:[container],flags: MessageFlags.IsComponentsV2});
+            const roundCollector = response.createMessageComponentCollector({
+                componentType: ComponentType.StringSelect,
+                time: 60000,
+            })
+            const buttonCollector = response.createMessageComponentCollector({
+                componentType: ComponentType.Button,
+                time: 60000,
+            });
+            roundCollector.on('collect', async collectedInteraction => {
+                if (collectedInteraction.user.id !== interaction.user.id) {
+                    return collectedInteraction.reply({content: "이 명령어는 당신을 위해 만들어진 것이 아닙니다.(<--코파일럿이 씀 ㄷㄷ)", ephemeral: true});
+                }
+                const selectedRounds = parseInt(collectedInteraction.values[0]);
+                roomData.gameSettings.rounds = selectedRounds;
+                roomData.markModified('gameSettings.rounds');
+                await roomData.save();
+                await collectedInteraction.reply({content: `라운드 수가 ${selectedRounds}로 설정되었습니다.`});
+                await interaction.editReply({components: [await makeSettingContainer(roomData)], flags: MessageFlags.IsComponentsV2});
+            });
+            buttonCollector.on('collect', async collectedInteraction => {
+                if (collectedInteraction.user.id !== interaction.user.id) {
+                    return collectedInteraction.reply({content: "이 명령어는 당신을 위해 만들어진 것이 아닙니다.(<--코파일럿이 씀 ㄷㄷ)", ephemeral: true});
+                }
+                roomData.gameSettings.mannerMode = !roomData.gameSettings.mannerMode;
+                roomData.markModified('gameSettings.mannerMode');
+                await roomData.save();
+                await collectedInteraction.reply({content: `메너모드가 ${roomData.gameSettings.mannerMode ? '켜짐' : '꺼짐'}으로 설정되었습니다.`});
+                await interaction.editReply({components:[await makeSettingContainer(roomData)], flags: MessageFlags.IsComponentsV2});
             });
         }
     }

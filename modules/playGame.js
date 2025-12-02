@@ -96,6 +96,11 @@ async function playGame(message) {
                     await message.reply({content: "등록되지 않은 단어입니다.", ephemeral: true});
                     return;
                 }
+                const isNotMannerWord = await db.isNotMannerWord(newWord);
+                if (!isNotMannerWord) {
+                    await message.reply({content: `한방단어: ${newWord}`, ephemeral: true});
+                    return;
+                }
 
                 // 게임 진행
                 gameData.usedWords.push(newWord);

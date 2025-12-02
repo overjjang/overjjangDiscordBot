@@ -19,6 +19,7 @@ const gameRoomSchema = new Schema({
         default: {}
     },
     maxPlayers: { type: Number, required: true },
+    gameSettings: { type: Schema.Types.Mixed, default: {} },
     gameData: { type: Schema.Types.Mixed, default: {} }
     });
 
