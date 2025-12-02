@@ -110,11 +110,14 @@ async function playGame(message) {
                 const newAllowedFirstChars = getDueumVariants(newWord.charAt(newWord.length - 1));
                 const container = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ${lastWord} ➔ ${newWord}`)).addSeparatorComponents(new SeparatorBuilder()).addTextDisplayComponents(new TextDisplayBuilder().setContent(`다음 차례: <@${gameData.playerSeq[gameData.currentTurnIndex].userId}>`)).addSeparatorComponents(new SeparatorBuilder()).addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ➔ ${newAllowedFirstChars.join(', ')}`));
                 await message.channel.send({components: [container],flags: MessageFlags.IsComponentsV2});
+                gameData.lastTimeStamp = new Date();
+
 
                 console.log(roomData, gameData);
                 roomData.gameData = gameData;
                 roomData.markModified('gameData');
                 await roomData.save();
+
             } else {
                 await message.reply("게임이 아직 시작되지 않았습니다. 방장이 게임을 시작해야 합니다.");
             }

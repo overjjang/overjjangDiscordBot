@@ -190,6 +190,8 @@ module.exports = {
             roomData.gameSettings.mannerMode = roomData.gameSettings.mannerMode || true;
             // 초기화
             roomData.gameData = {};
+            roomData.gameData.remainingTime = roomData.gameSettings.timeLimit
+            roomData.gameData.lastTimeStamp = new Date();
             const firstWordResult = await db.getRandomWord(firstWordLength)
             roomData.gameData.lastWord = firstWordResult.charAt(0);
             roomData.gameData.firstWord = firstWordResult;

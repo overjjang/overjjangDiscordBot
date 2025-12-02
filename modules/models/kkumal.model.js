@@ -5,8 +5,12 @@ const string_decoder = require("node:string_decoder");
 const Schema = mongoose.Schema;
 
 const kkumalDataSchema = new Schema({
-    playerSeq: { type: [{ userId: String, userName: String }], default: [] },
+    playerSeq: { type: [{ userId: String, userName: String, userScore: Number }], default: [] },
     currentTurnIndex: { type: Number, default: 0 },
+    currentRound: { type: Number, default: 1 },
+    lastTimeStamp: { type: Date, default: null },
+    remainingTime: { type: Number, default: null },
+    turnTimeLimit: { type: Number, default: null },
     lastWord: { type: String, default: null },
     usedWords: { type: [String], default: [] },
 })
