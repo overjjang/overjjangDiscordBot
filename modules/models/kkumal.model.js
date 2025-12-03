@@ -7,18 +7,19 @@ const Schema = mongoose.Schema;
 const kkumalDataSchema = new Schema({
     playerSeq: { type: [{ userId: String, userName: String, userScore: Number }], default: [] },
     currentTurnIndex: { type: Number, default: 0 },
-    currentRound: { type: Number, default: 1 },
+    currentRound: { type: Number, default: 0 },
     lastTimeStamp: { type: Date, default: null },
     remainingTime: { type: Number, default: null },
     turnTimeLimit: { type: Number, default: null },
     lastWord: { type: String, default: null },
     usedWords: { type: [String], default: [] },
+    firstWord: { type: String, default: null },
 })
 
 const kkumalSettingSchema = new Schema({
     rounds: { type: Number, default: 5 },
     mannerMode: { type: Boolean, default: true },
-    timeLimit: { type: Number, default: 30 },
+    timeLimit: { type: Number, default: 60000 }, // ms
 })
 
 module.exports = {
