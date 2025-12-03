@@ -23,7 +23,7 @@ async function makeSettingContainer(roomData) {
                 )
         )
         .addSeparatorComponents(new SeparatorBuilder())
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`메너 모드`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`매너 모드`))
         .addActionRowComponents(
             new ActionRowBuilder()
                 .addComponents(
@@ -78,7 +78,7 @@ const data = new SlashCommandBuilder()
     )
 
 //gameData : 순서, 현재턴, 마지막단어, 사용된단어목록
-//gameSettings : 라운드수, 메너, 시간제한 등 설정
+//gameSettings : 라운드수, 매너, 시간제한 등 설정
 
 module.exports = {
     data: data,
@@ -299,7 +299,7 @@ module.exports = {
                 roomData.gameSettings.mannerMode = !roomData.gameSettings.mannerMode;
                 roomData.markModified('gameSettings.mannerMode');
                 await roomData.save();
-                await collectedInteraction.reply({content: `메너모드가 ${roomData.gameSettings.mannerMode ? '켜짐' : '꺼짐'}으로 설정되었습니다.`});
+                await collectedInteraction.reply({content: `매너모드가 ${roomData.gameSettings.mannerMode ? '켜짐' : '꺼짐'}으로 설정되었습니다.`});
                 await interaction.editReply({components:[await makeSettingContainer(roomData)], flags: MessageFlags.IsComponentsV2});
             });
         }
