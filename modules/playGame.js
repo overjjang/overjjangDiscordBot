@@ -68,12 +68,6 @@ async function playGame(message) {
                         const container = new ContainerBuilder()
                             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 게임 종료!`))
                             .addSeparatorComponents(new SeparatorBuilder())
-                            .addTextDisplayComponents(
-                                new TextDisplayBuilder().setContent(`### 최종 점수:`)
-                            )
-                            .addTextDisplayComponents(
-                                new TextDisplayBuilder().setContent(`${gameData.playerSeq.map(player => `- <@${player.userID}>: ${player.userScore}점`).join('\n')}`
-                                ));
 
                         await message.channel.send({components: [container], flags: MessageFlags.IsComponentsV2});
                         roomData.isStarted = false;
@@ -190,13 +184,6 @@ async function playGame(message) {
                                 const container = new ContainerBuilder()
                                     .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 게임 종료!`))
                                     .addSeparatorComponents(new SeparatorBuilder())
-                                    .addTextDisplayComponents(
-                                        new TextDisplayBuilder().setContent(`### 최종 점수:`)
-                                    )
-                                    .addTextDisplayComponents(
-                                        new TextDisplayBuilder().setContent(`${gameData.playerSeq.map(player => `- <@${player.userID}>: ${player.userScore}점`).join('\n')}`
-                                        ));
-
                                 await message.channel.send({components: [container], flags: MessageFlags.IsComponentsV2});
                                 roomData.isStarted = false;
                                 roomData.markModified('gameData');
