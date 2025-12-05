@@ -35,7 +35,7 @@ async function createGameRoom(channelId, gameType, maxPlayers, interaction) {
             gameType: gameType,
             maxPlayers: maxPlayers,
             bangJang: bangjangInfo || {},
-            players: [{ userId: interaction.user.id, userName: interaction.user.username }],
+            players: [{ userId: interaction.user.id, userName: interaction.user.username,userScore:0 }],
         };
         const newRoom = new gameRoom(roomData);
         if (gameType === "kkumal") {

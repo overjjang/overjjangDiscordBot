@@ -51,7 +51,7 @@ async function playGame(message) {
         const roomData = await db.findByRoomId(message.channel.id);
         if (!roomData) console.log("게임 방 데이터를 찾을 수 없습니다.");
         if (roomData.gameType === "kkumal") {
-            // 끝말잇기 게임 로직 처리
+            // 끝말잇기 게임 로직
             if (roomData.isStarted) {
                 const gameData = roomData.gameData || {};
                 gameData.usedWords = gameData.usedWords || [];
@@ -67,7 +67,24 @@ async function playGame(message) {
                     await message.reply({content: `타임오버!${remainingTurnTime/1000}초 늦었습니다. 5초 후 다음 라운드가 시작됩니다.`});
                     gameData.remainingTime = 0;
                     roomData.isStarted = false;
-                    gameData.currentRound = gameData.currentRound + 1;
+                    gameData.currentRound += 1;
+                    if (gameData.currentRound >= roomData.gameSettings.rounds) {
+                        const container = new ContainerBuilder()
+                            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 게임 종료!`))
+                            .addSeparatorComponents(new SeparatorBuilder())
+                            .addTextDisplayComponents(
+                                new TextDisplayBuilder().setContent(`### 최종 점수:`)
+                            )
+                            .addTextDisplayComponents(
+                                new TextDisplayBuilder().setContent(`${gameData.playerSeq.map(player => `- <@${player.userID}>: ${player.userScore}점`).join('\n')}`
+                                ));
+
+                        await message.channel.send({components: [container],flags: MessageFlags.IsComponentsV2});
+                        roomData.isStarted = false;
+                        roomData.markModified('gameData');
+                        await roomData.save();
+                        return;
+                    }
                     gameData.remainingTime = roomData.gameSettings.timeLimit
                     gameData.turnTimeLimit = roomData.gameSettings.timeLimit / 5;
                     gameData.usedWords = []
@@ -137,10 +154,14 @@ async function playGame(message) {
                     return;
                 }
 
-
                 // 게임 진행
                 const lastTurnIndex = gameData.usedWords.length;
                 const lastPlayer = gameData.playerSeq[gameData.currentTurnIndex];
+                const score = Math.floor((newWord.length*10) + (10*(remainingTurnTime/gameData.turnTimeLimit)));
+                if (!gameData.playerSeq[gameData.currentTurnIndex].userScore) {
+                    gameData.playerSeq[gameData.currentTurnIndex].userScore = 0;
+                }
+                gameData.playerSeq[gameData.currentTurnIndex].userScore += score;
 
                 gameData.usedWords.push(newWord);
                 gameData.lastWord = newWord;
@@ -152,9 +173,10 @@ async function playGame(message) {
                 }
                 gameData.lastTimeStamp = now;
 
+
                 const newAllowedFirstChars = getDueumVariants(newWord.charAt(newWord.length - 1));
                 const container = new ContainerBuilder()
-                    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ${lastWord} ➔ ${newWord}`))
+                    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# ${lastWord} ➔ ${newWord}\n(+${score}) total: ${gameData.playerSeq[gameData.currentTurnIndex].userScore}`))
                     .addSeparatorComponents(new SeparatorBuilder())
                     .addTextDisplayComponents(new TextDisplayBuilder().setContent(`다음 차례: <@${gameData.playerSeq[gameData.currentTurnIndex].userId}>`))
                     .addSeparatorComponents(new SeparatorBuilder())
@@ -165,15 +187,42 @@ async function playGame(message) {
                 roomData.gameData = gameData;
                 roomData.markModified('gameData');
                 await roomData.save();
+
+
+                // 타임아웃
                 setTimeout(
                     async () => {
                         const roomData = await db.findByRoomId(message.channel.id);
                         const nowTurnIndex = roomData.gameData.usedWords.length
+                        const score = nowTurnIndex * 5;
+                        const playerScore = lastPlayer.userScore
+                        if (playerScore >= score) {
+                            roomData.gameData.playerSeq.find(player => player === lastPlayer).userScore -= score;
+                        } else {
+                            roomData.gameData.playerSeq.find(player => player === lastPlayer).userScore = 0;
+                        }
                         if (nowTurnIndex === lastTurnIndex && roomData.isStarted) {
                             await message.channel.send({content: `<@${lastPlayer.userId}> 타임오버! 5초 후 다음 라운드가 시작됩니다.`});
                             roomData.isStarted = false;
                             const gameData = roomData.gameData;
                             gameData.currentRound = gameData.currentRound + 1;
+                            if (gameData.currentRound >= roomData.gameSettings.rounds) {
+                                const container = new ContainerBuilder()
+                                    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 게임 종료!`))
+                                    .addSeparatorComponents(new SeparatorBuilder())
+                                    .addTextDisplayComponents(
+                                        new TextDisplayBuilder().setContent(`### 최종 점수:`)
+                                    )
+                                    .addTextDisplayComponents(
+                                        new TextDisplayBuilder().setContent(`${gameData.playerSeq.map(player => `- <@${player.userID}>: ${player.userScore}점`).join('\n')}`
+                                    ));
+
+                                await message.channel.send({components: [container],flags: MessageFlags.IsComponentsV2});
+                                roomData.isStarted = false;
+                                roomData.markModified('gameData');
+                                await roomData.save();
+                                return;
+                            }
                             gameData.remainingTime = roomData.gameSettings.timeLimit
                             gameData.turnTimeLimit = roomData.gameSettings.timeLimit / 5;
                             gameData.usedWords = []

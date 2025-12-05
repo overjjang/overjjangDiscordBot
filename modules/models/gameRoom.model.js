@@ -11,7 +11,7 @@ const gameRoomSchema = new Schema({
     date : { type: Date, required: true },
     gameType: { type: String, required: true },
     players:{
-        type: [{ userId: String, userName: String }],
+        type: [{ userId: String, userName: String, userScore: Number },],
         default: []
     },
     bangJang:{
