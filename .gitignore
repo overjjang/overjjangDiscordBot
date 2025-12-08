@@ -2,3 +2,5 @@
 /node_modules
 /dummy
 db.sql
+/.vscode
+/.idea
