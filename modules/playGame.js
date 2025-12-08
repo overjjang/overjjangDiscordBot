@@ -64,7 +64,7 @@ async function playGame(message) {
                 console.log(`이전 타임스템프: ${gameData.lastTimeStamp}, 현재 타임스템프: ${now}, 시간 차이: ${timeDelta}ms`);
                 const remainingTurnTime = gameData.turnTimeLimit - timeDelta;
                 if (remainingTurnTime < 0) {
-                    if (gameData.currentRound >= roomData.gameSettings.rounds) {
+                    if (gameData.currentRound + 1 >= roomData.gameSettings.rounds) {
                         const container = new ContainerBuilder()
                             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 게임 종료!`))
                             .addSeparatorComponents(new SeparatorBuilder())
@@ -72,7 +72,7 @@ async function playGame(message) {
                                 new TextDisplayBuilder().setContent(`### 최종 점수:`)
                             )
                             .addTextDisplayComponents(
-                                new TextDisplayBuilder().setContent(`${gameData.playerSeq.map(player => `- <@${player.userID}>: ${player.userScore}점`).join('\n')}`
+                                new TextDisplayBuilder().setContent(`${gameData.playerSeq.map(player => `- <@${player.userId}>: ${player.userScore}점`).join('\n')}`
                                 ));
 
                         await message.channel.send({components: [container], flags: MessageFlags.IsComponentsV2});
@@ -81,7 +81,7 @@ async function playGame(message) {
                         await roomData.save();
                         return;
                     }
-                    await message.reply({content: `타임오버!${remainingTurnTime/1000}초 늦었습니다. 5초 후 다음 라운드가 시작됩니다.`});
+                    await message.reply({content: `타임오버!${(remainingTurnTime/1000).toFixed(2)}초 늦었습니다. 5초 후 다음 라운드가 시작됩니다.`});
                     gameData.remainingTime = 0;
                     roomData.isStarted = false;
                     gameData.currentRound += 1;
@@ -100,7 +100,7 @@ async function playGame(message) {
                                 .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${gameData.firstWord.slice(0,gameData.currentRound)}[${gameData.firstWord.charAt(gameData.currentRound)}]${gameData.firstWord.slice(gameData.currentRound+1)} `))
                                 .addSeparatorComponents(new SeparatorBuilder())
                                 .addTextDisplayComponents(new TextDisplayBuilder().setContent(`다음 차례: <@${gameData.playerSeq[gameData.currentTurnIndex].userId}>`))
-                                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ➔ ${gameData.lastWord}`));
+                                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ➔ ${getDueumVariants(gameData.lastWord).join(', ')}`));
                             await message.channel.send({components: [container],flags: MessageFlags.IsComponentsV2});
                             roomData.isStarted = true;
                             gameData.lastTimeStamp = new Date();
@@ -156,7 +156,7 @@ async function playGame(message) {
 
                 // 게임 진행
                 const lastTurnIndex = gameData.usedWords.length;
-                const lastPlayer = gameData.playerSeq[gameData.currentTurnIndex];
+                const lastPlayer = gameData.currentTurnIndex;
                 const score = Math.floor((newWord.length*10) + (10*(remainingTurnTime/gameData.turnTimeLimit)));
                 if (!gameData.playerSeq[gameData.currentTurnIndex].userScore) {
                     gameData.playerSeq[gameData.currentTurnIndex].userScore = 0;
@@ -195,14 +195,14 @@ async function playGame(message) {
                         const roomData = await db.findByRoomId(message.channel.id);
                         const nowTurnIndex = roomData.gameData.usedWords.length
                         const score = nowTurnIndex * 5;
-                        const playerScore = lastPlayer.userScore
+                        const playerScore = roomData.gameData.playerSeq[lastPlayer]
                         if (playerScore >= score) {
-                            roomData.gameData.playerSeq.find(player => player === lastPlayer).userScore -= score;
+                            roomData.gameData.playerSeq[lastPlayer].userScore = playerScore - score;
                         } else {
-                            roomData.gameData.playerSeq.find(player => player === lastPlayer).userScore = 0;
+                            roomData.gameData.playerSeq[lastPlayer].userScore = 0;
                         }
                         if (nowTurnIndex === lastTurnIndex && roomData.isStarted) {
-                            if (gameData.currentRound >= roomData.gameSettings.rounds) {
+                            if (gameData.currentRound + 1 >= roomData.gameSettings.rounds) {
                                 const container = new ContainerBuilder()
                                     .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 게임 종료!`))
                                     .addSeparatorComponents(new SeparatorBuilder())
@@ -210,7 +210,7 @@ async function playGame(message) {
                                         new TextDisplayBuilder().setContent(`### 최종 점수:`)
                                     )
                                     .addTextDisplayComponents(
-                                        new TextDisplayBuilder().setContent(`${gameData.playerSeq.map(player => `- <@${player.userID}>: ${player.userScore}점`).join('\n')}`
+                                        new TextDisplayBuilder().setContent(`${gameData.playerSeq.map(player => `- <@${player.userId}>: ${player.userScore}점`).join('\n')}`
                                         ));
 
                                 await message.channel.send({components: [container], flags: MessageFlags.IsComponentsV2});
@@ -238,7 +238,7 @@ async function playGame(message) {
                                         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${gameData.firstWord.slice(0, gameData.currentRound)}[${gameData.firstWord.charAt(gameData.currentRound)}]${gameData.firstWord.slice(gameData.currentRound + 1)} `))
                                         .addSeparatorComponents(new SeparatorBuilder())
                                         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`다음 차례: <@${gameData.playerSeq[gameData.currentTurnIndex].userId}>`))
-                                        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ➔ ${gameData.lastWord}`));
+                                        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ➔ ${(gameData.lastWord).join(', ')}`));
                                     await message.channel.send({
                                         components: [container],
                                         flags: MessageFlags.IsComponentsV2
