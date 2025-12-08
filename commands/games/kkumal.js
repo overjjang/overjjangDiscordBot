@@ -131,7 +131,7 @@ module.exports = {
                 await interaction.reply({content:"이미 시작된 방에는 입장하실 수 없습니다."});
                 return;
             }
-            roomData.players.push({userId: interaction.user.id, userName: interaction.user.username});
+            roomData.players.push({userId: interaction.user.id, userName: interaction.user.username, userScore:0});
             await roomData.save();
             await interaction.reply({content: "게임에 성공적으로 입장했습니다!", ephemeral: true});
             await interaction.channel.send(`${interaction.user}님이 게임에 참여하셨습니다!`);
