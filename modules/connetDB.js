@@ -50,6 +50,7 @@ async function createGameRoom(channelId, gameType, maxPlayers, interaction) {
     }
 }
 
+// 채널 아이디로 게임 룸 조회
 async function findByRoomId(channelId) {
     try {
         const data = await gameRoom.findOne({ roomId: channelId });
@@ -60,6 +61,7 @@ async function findByRoomId(channelId) {
     }
 }
 
+// 채널 아이디로 게임 룸 삭제
 async function deleteByRoomId(channelId,doArchive=false) {
     try {
         if (doArchive) {
@@ -75,6 +77,7 @@ async function deleteByRoomId(channelId,doArchive=false) {
     }
 }
 
+// DB에 단어가 있는지 확인
 async function exists(word) {
     try {
         const query = `
@@ -102,6 +105,7 @@ async function exists(word) {
     }
 }
 
+// 시작 렌덤 단어 가져오기
 async function getRandomWord(length) {
     try{
         const query = `
@@ -120,6 +124,8 @@ async function getRandomWord(length) {
         console.error('단어 조회 중 오류 발생:', err);
     }
 }
+
+// 매너 단어인지 확인
 async function isNotMannerWord(word) {
     const lastWord = word.charAt(word.length - 1);
     console.log("Checking manner word for:", lastWord);

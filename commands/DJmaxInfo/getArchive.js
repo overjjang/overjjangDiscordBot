@@ -65,7 +65,6 @@ module.exports = {
         if (subcommand === "티어") {
             const userId = interaction.options.getString('아이디');
             const button = interaction.options.getString('버튼');
-
             await interaction.deferReply();
 
             const url = `${urlBase}/${userId}/tier/${button}`;
