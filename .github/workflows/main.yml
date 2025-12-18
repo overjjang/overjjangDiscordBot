@@ -14,12 +14,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        working-directory: ./overjjangDiscordBot
         run: npm install
 
       - name: Run deploy script
-        working-directory: ./overjjangDiscordBot
         run: node commandDeploy.js
 
       - name: Restart bot with PM2
-        run: pm2 restart overjjangBot || pm2 start ./overjjangDiscordBot/index.js --name overjjangBot
+        run: pm2 restart overjjangBot || pm2 start index.js --name overjjangBot
