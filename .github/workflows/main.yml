@@ -7,25 +7,34 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: Debug current directory
-        run: |
-          pwd
-          ls -la
+      - name: Deploy to server via SSH
+        env:
+          SERVER_HOST: ${{secrets.SERVER_HOST}}
+          SERVER_USER: ${{secrets.SERVER_USER}}
+          SERVER_SSH_KEY: ${{secrets.SERVER_SSH_KEY}}
+        if: ${{env.SERVER_HOST && env.SERVER_USER && env.SERVER_SSH_KEY}}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd ./overjjangDiscordBot/
+            git pull origin main
+            npm install
+            node commandDeploy.js
+            pm2 restart overjjangBot
 
-      - name: Install dependencies
-        run: npm install
-      - name: Inject .env file
-        run: |
-          cp /home/overjjang/env/overjjangDiscordBot.env .env
-
-      - name: Run deploy script
-        run: node commandDeploy.js
-
-      - name: Restart bot with PM2
-        run: pm2 restart overjjangBot || pm2 start index.js --name overjjangBot
+      - name: Skip deployment in fork
+        env:
+          SERVER_HOST: ${{secrets.SERVER_HOST}}
+          SERVER_USER: ${{secrets.SERVER_USER}}
+          SERVER_SSH_KEY: ${{secrets.SERVER_SSH_KEY}}
+        if: ${{env.SERVER_HOST == null || env.SERVER_USER == null || env.SERVER_SSH_KEY == null}}
+        run: echo "Secrets not found. Skipping deployment."
