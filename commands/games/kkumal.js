@@ -190,10 +190,10 @@ module.exports = {
             roomData.gameSettings.mannerMode = roomData.gameSettings.mannerMode || true;
             // 초기화
             roomData.gameData = {};
-            roomData.gameData.remainingTime = roomData.gameSettings.timeLimit
-            roomData.gameData.lastTimeStamp = new Date();
             roomData.gameData.currentRound = 0;
-            roomData.gameData.timeLimit = roomData.gameSettings.timeLimit / 5
+            roomData.gameData.remainingTime = roomData.gameSettings.timeLimit
+            roomData.gameData.turnTimeLimit = roomData.gameSettings.timeLimit / 5
+            
             const firstWordResult = await db.getRandomWord(firstWordLength)
             roomData.gameData.lastWord = firstWordResult.charAt(0);
             roomData.gameData.firstWord = firstWordResult;
@@ -208,6 +208,8 @@ module.exports = {
                 .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## [${firstWordResult.charAt(0)}]${firstWordResult.slice(1)}`));
             await interaction.editReply({components:[container], flags: MessageFlags.IsComponentsV2});
             await interaction.channel.send(`<@${roomData.gameData.playerSeq[0].userId}>님의 차례입니다! 단어를 입력해주세요.\n 남은 시간: ${roomData.gameData.remainingTime / 1000}초, 턴 제한 시간: ${roomData.gameData.timeLimit / 1000}초`);
+            roomData.gameData.lastTimeStamp = new Date();
+
             roomData.isStarted = true;
             await roomData.save();
         }

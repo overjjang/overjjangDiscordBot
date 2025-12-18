@@ -23,6 +23,60 @@ function getTimeLimitState(gameData) {
     };
 }
 
+async function turnOverHandler(message, roomData, remainingTurnTime) {
+    const gameData = roomData.gameData;
+    if (gameData.currentRound + 1 >= roomData.gameSettings.rounds) {
+
+        const container = new ContainerBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 게임 종료!`))
+            .addSeparatorComponents(new SeparatorBuilder())
+            .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent(`### 최종 점수:`)
+            )
+            .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent(`${gameData.playerSeq.map(player => `- <@${player.userId}>: ${player.userScore}점`).join('\n')}`)
+            );
+
+        await message.channel.send({components: [container], flags: MessageFlags.IsComponentsV2});
+        roomData.isStarted = false;
+        roomData.markModified('gameData');
+        await roomData.save();
+        return;
+    }
+
+    // 다음 라운드 시작
+    await message.reply({content: `타임오버!${(remainingTurnTime/1000).toFixed(2)}초 늦었습니다. 5초 후 다음 라운드가 시작됩니다.`});
+    // 5초후 안내 메시지
+    setTimeout(
+        async () => {
+            roomData.isStarted = true;
+            gameData.lastTimeStamp = new Date();
+            gameData.remainingTime = 0;
+            gameData.currentRound += 1;
+            gameData.remainingTime = roomData.gameSettings.timeLimit
+            gameData.turnTimeLimit = roomData.gameSettings.timeLimit / 5;
+            gameData.usedWords = []
+            gameData.lastWord = gameData.firstWord.charAt(gameData.currentRound)
+            roomData.gameData = gameData;
+            const container = new ContainerBuilder()
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${gameData.currentRound + 1}라운드`))
+                .addSeparatorComponents(new SeparatorBuilder())
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${gameData.firstWord.slice(0,gameData.currentRound)}[${gameData.firstWord.charAt(gameData.currentRound)}]${gameData.firstWord.slice(gameData.currentRound+1)} `))
+                .addSeparatorComponents(new SeparatorBuilder())
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`다음 차례: <@${gameData.playerSeq[gameData.currentTurnIndex].userId}>`))
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ➔ ${getDueumVariants(gameData.lastWord).join(', ')}`));
+
+            await message.channel.send({components: [container],flags: MessageFlags.IsComponentsV2});
+            const saveRoomData = await db.findByRoomId(message.channel.id);
+            saveRoomData.gameData = roomData.gameData;
+            saveRoomData.isStarted = true;
+            saveRoomData.markModified('gameData');
+            await saveRoomData.save();
+        },5000
+    )
+}
+
+
 // 두음법칙에 따른 가능한 첫 글자 변형 반환
 function getDueumVariants(lastChar) {
     const code = lastChar.charCodeAt(0);
@@ -82,54 +136,11 @@ async function playGame(message) {
                 const { now, elapsed: timeDelta, remainingTurnTime } = getTimeLimitState(gameData);
                 console.log(`이전 타임스템프: ${gameData.lastTimeStamp}, 현재 타임스템프: ${now}, 시간 차이: ${timeDelta}ms`);
                 if (remainingTurnTime < 0) {
-                    // 라운드가 모두 끝난 경우
-                    if (gameData.currentRound + 1 >= roomData.gameSettings.rounds) {
-                        const container = new ContainerBuilder()
-                            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 게임 종료!`))
-                            .addSeparatorComponents(new SeparatorBuilder())
-                            .addTextDisplayComponents(
-                                new TextDisplayBuilder().setContent(`### 최종 점수:`)
-                            )
-                            .addTextDisplayComponents(
-                                new TextDisplayBuilder().setContent(`${gameData.playerSeq.map(player => `- <@${player.userId}>: ${player.userScore}점`).join('\n')}`
-                                ));
-
-                        await message.channel.send({components: [container], flags: MessageFlags.IsComponentsV2});
-                        roomData.isStarted = false;
-                        roomData.markModified('gameData');
-                        await roomData.save();
-                        return;
-                    }
-                    // 다음 라운드 시작
-                    await message.reply({content: `타임오버!${(remainingTurnTime/1000).toFixed(2)}초 늦었습니다. 5초 후 다음 라운드가 시작됩니다.`});
-                    gameData.remainingTime = 0;
                     roomData.isStarted = false;
-                    gameData.currentRound += 1;
-                    gameData.remainingTime = roomData.gameSettings.timeLimit
-                    gameData.turnTimeLimit = roomData.gameSettings.timeLimit / 5;
-                    gameData.usedWords = []
-                    gameData.lastWord = gameData.firstWord.charAt(gameData.currentRound)
-                    roomData.gameData = gameData;
                     roomData.markModified('gameData');
                     await roomData.save();
-                    // 5초후 안내 메시지
-                    setTimeout(
-                        async () => {
-                            const container = new ContainerBuilder()
-                                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${gameData.currentRound + 1}라운드`))
-                                .addSeparatorComponents(new SeparatorBuilder())
-                                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${gameData.firstWord.slice(0,gameData.currentRound)}[${gameData.firstWord.charAt(gameData.currentRound)}]${gameData.firstWord.slice(gameData.currentRound+1)} `))
-                                .addSeparatorComponents(new SeparatorBuilder())
-                                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`다음 차례: <@${gameData.playerSeq[gameData.currentTurnIndex].userId}>`))
-                                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ➔ ${getDueumVariants(gameData.lastWord).join(', ')}`));
-                            await message.channel.send({components: [container],flags: MessageFlags.IsComponentsV2});
-                            roomData.isStarted = true;
-                            gameData.lastTimeStamp = new Date();
-                            roomData.gameData = gameData;
-                            roomData.markModified('gameData');
-                            await roomData.save();
-                        },5000
-                    )
+
+                    await turnOverHandler(message, roomData, remainingTurnTime);
                     return;
                 }
                 // 플레이어가 게임 방에 속해있는지 확인
@@ -184,8 +195,7 @@ async function playGame(message) {
                 }
 
                 // 게임 진행
-                const lastTurnIndex = gameData.usedWords.length;
-                const lastPlayer = gameData.currentTurnIndex;
+
                 // 점수 로직
                 const score = Math.floor((newWord.length*10) + (10*(remainingTurnTime/gameData.turnTimeLimit)));
                 if (!gameData.playerSeq[gameData.currentTurnIndex].userScore) {
@@ -217,76 +227,32 @@ async function playGame(message) {
                 roomData.gameData = gameData;
                 roomData.markModified('gameData');
                 await roomData.save();
+                const lastRoomData = roomData;
                 // 정상 게임 진행 로직 끝
 
-
+                console.log(`남은 턴 시간: ${gameData.turnTimeLimit}ms`);
                 // 타임오버 체크 (타임아웃 설정)
                 setTimeout(
                     async () => {
-                        const roomData = await db.findByRoomId(message.channel.id);
-                        const nowTurnIndex = roomData.gameData.usedWords.length
-                        const score = nowTurnIndex * 5;
-                        const playerScore = roomData.gameData.playerSeq[lastPlayer]
-                        if (playerScore >= score) {
-                            roomData.gameData.playerSeq[lastPlayer].userScore = playerScore - score;
-                        } else {
-                            roomData.gameData.playerSeq[lastPlayer].userScore = 0;
-                        }
-                        if (nowTurnIndex === lastTurnIndex && roomData.isStarted) {
-                            if (gameData.currentRound + 1 >= roomData.gameSettings.rounds) {
-                                const container = new ContainerBuilder()
-                                    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`# 게임 종료!`))
-                                    .addSeparatorComponents(new SeparatorBuilder())
-                                    .addTextDisplayComponents(
-                                        new TextDisplayBuilder().setContent(`### 최종 점수:`)
-                                    )
-                                    .addTextDisplayComponents(
-                                        new TextDisplayBuilder().setContent(`${gameData.playerSeq.map(player => `- <@${player.userId}>: ${player.userScore}점`).join('\n')}`
-                                        ));
+                        const currentRoomData = await db.findByRoomId(message.channel.id);
 
-                                await message.channel.send({components: [container], flags: MessageFlags.IsComponentsV2});
-                                roomData.isStarted = false;
-                                roomData.markModified('gameData');
-                                await roomData.save();
-                                return;
-                            }
-                            await message.channel.send({content: `<@${lastPlayer.userId}> 타임오버! 5초 후 다음 라운드가 시작됩니다.`});
+                        const currentGameData = currentRoomData.gameData;
+                        const nowTurnIndex = currentGameData.usedWords.length
+                        const lastTurnIndex = lastRoomData.gameData.usedWords.length;
+                        const nowRound = currentGameData.currentRound;
+                        const lastRound = lastRoomData.gameData.currentRound;
+                        console.log(`타임아웃 체크: 현재 턴 인덱스 ${nowTurnIndex}, 이전 턴 인덱스 ${lastTurnIndex}, 게임 시작 여부: ${currentRoomData.isStarted}`);
+                        if (nowTurnIndex === lastTurnIndex && nowRound === lastRound && currentRoomData.isStarted) {
                             roomData.isStarted = false;
-                            const gameData = roomData.gameData;
-                            gameData.currentRound = gameData.currentRound + 1;
-                            gameData.remainingTime = roomData.gameSettings.timeLimit
-                            gameData.turnTimeLimit = roomData.gameSettings.timeLimit / 5;
-                            gameData.usedWords = []
-                            gameData.lastWord = gameData.firstWord.charAt(gameData.currentRound)
-                            roomData.gameData = gameData;
                             roomData.markModified('gameData');
                             await roomData.save();
-                            setTimeout(
-                                async () => {
-                                    const container = new ContainerBuilder()
-                                        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${gameData.currentRound + 1}라운드`))
-                                        .addSeparatorComponents(new SeparatorBuilder())
-                                        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ${gameData.firstWord.slice(0, gameData.currentRound)}[${gameData.firstWord.charAt(gameData.currentRound)}]${gameData.firstWord.slice(gameData.currentRound + 1)} `))
-                                        .addSeparatorComponents(new SeparatorBuilder())
-                                        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`다음 차례: <@${gameData.playerSeq[gameData.currentTurnIndex].userId}>`))
-                                        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## ➔ ${(gameData.lastWord).join(', ')}`));
-                                    await message.channel.send({
-                                        components: [container],
-                                        flags: MessageFlags.IsComponentsV2
-                                    });
-                                    roomData.isStarted = true;
-                                    gameData.lastTimeStamp = new Date();
-                                    roomData.gameData = gameData;
-                                    roomData.markModified('gameData');
-                                    await roomData.save();
-                                }, 5000
-                            )
+                            await turnOverHandler(message, currentRoomData, 1000);
                         }
                     },gameData.turnTimeLimit + 1000
                 )
 
             } else {
-                await message.reply("게임이 아직 시작되지 않았습니다. 방장이 게임을 시작해야 합니다.");
+                await message.reply("게임이 아직 시작되지 않았습니다.");
             }
         }
     }
