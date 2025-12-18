@@ -20,6 +20,9 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+      - name: Inject .env file
+        run: |
+          cp /home/overjjang/env/overjjangDiscordBot.env .env
 
       - name: Run deploy script
         run: node commandDeploy.js
