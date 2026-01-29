@@ -23,7 +23,7 @@ module.exports = {
         try {
             console.log(`검사할 메시지: ${question}`);
             const response = await ai.models.generateContent({
-                model: 'gemini-2.0-flash',
+                model: 'gemini-2.5-flash',
                 contents: `${question}`,
                 config: {
                     systemInstruction: "You are a korean spelling and grammar checker. " +
