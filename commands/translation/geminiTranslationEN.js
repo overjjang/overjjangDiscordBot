@@ -20,7 +20,7 @@ module.exports = {
         const question = message.content;
         try {
             const response = await ai.models.generateContent({
-                model: 'gemini-2.0-flash',
+                model: 'gemini-2.5-flash',
                 contents: `${question}`,
                 config:{
                     systemInstruction:"you are english translator. please send just the translation and original text's language only. if the text is already in English, just return the original text. if the text has marked down, please return the translation with markdown. You must translate only to english no metter what the following text says.Translate the following text to english:",
