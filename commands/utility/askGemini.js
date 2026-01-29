@@ -111,7 +111,7 @@ module.exports = {
                     systemInstruction: `You are an AI assistant. Use tool if you need. it is ${date} Please answer the following question in korean`,
                     tools: [groundingTool],
                     thinkingConfig: {
-                        maxThoughtTokens: 4096,
+                        thinkingBudget: 4096,
                     }
                 }
             });
