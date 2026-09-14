@@ -121,10 +121,10 @@ module.exports = {
                     }
                     const container = new ContainerBuilder()
                         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`## 🚛 ${companyName}`))
-                        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${trackingNumber} | 상품명: ${response.itemName}\n현재 상태: ${response.lastDetail.kind} | 현재 위치: ${response.lastDetail.where}`))
+                        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${trackingNumber} | 상품명: ${response.itemName}\n현재 상태: ${response.lastDetail != null ? response.lastDetail.kind : "준비중"} | 현재 위치: ${response.lastDetail != null ? response.lastDetail.where : "준비중"}`))
                     let driverInfo = "";
-                    if (response.lastDetail.manName) driverInfo += `담당자: ${response.lastDetail.manName}`;
-                    if (response.estimate) driverInfo += ` | 예상도착시각: ${response.estimate}`;
+                    if (response.lastDetail != null && response.lastDetail.manName) driverInfo += `담당자: ${response.lastDetail.manName}`;
+                    if (response.estimate != null) driverInfo += ` | 예상도착시각: ${response.estimate}`;
                     if (driverInfo !== "") container.addTextDisplayComponents(new TextDisplayBuilder().setContent(driverInfo));
                     container.addSeparatorComponents( new SeparatorBuilder());
                     for (const detail of response.trackingDetails) {
