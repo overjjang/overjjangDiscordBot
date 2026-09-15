@@ -1,5 +1,7 @@
 const { SlashCommandBuilder, MessageFlags, TextDisplayBuilder, SeparatorBuilder, ContainerBuilder } = require('discord.js');
 const cheerio = require('cheerio');
+const ep = require('../../modules/embedPrefix.js');
+const cm = require('../../modules/color-model');
 
 const fetchImpl = global.fetch
     ? global.fetch.bind(global)
@@ -202,8 +204,8 @@ function buildLunchContainer(today, meals) {
     container.setAccentColor(0x00fff7);
 
     container.addTextDisplayComponents(
-        new TextDisplayBuilder().setContent('## 🍽️ 오늘학식'),
-        new TextDisplayBuilder().setContent(`**조회일** : ${formatDateLabel(today)}\n**기준** : KST`),
+        new TextDisplayBuilder().setContent('### [한국항공대학교의 학식 정보](https://kau.ac.kr/kaulife/foodmenu.php)'),
+        new TextDisplayBuilder().setContent(`학식 정보는 ${formatDateLabel(today)} 기준입니다.`),
     );
 
     container.addSeparatorComponents(new SeparatorBuilder());
@@ -303,4 +305,3 @@ module.exports = {
         }
     },
 };
-
